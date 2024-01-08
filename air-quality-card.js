@@ -65,12 +65,6 @@ class AirQualityCard extends HTMLElement {
     return "var(--aq-red)";
   }
 
-  computeScore(sensorLevels) {
-    const penalty = { 1: 0, 2: 8, 3: 20, 4: 40, 5: 70 };
-    const total = sensorLevels.reduce((s, l) => s + (penalty[l] || 0), 0);
-    return Math.max(0, Math.round(100 - total / sensorLevels.length));
-  }
-
   ringOffset(score) {
     return 376.99 - (score / 100) * 376.99;
   }
@@ -168,13 +162,11 @@ class AirQualityCard extends HTMLElement {
 
   updateValues() {
     if (!this._hass || !this._config) return;
-    const levels = [];
     this._config.sensors.forEach((s, i) => {
       const raw = s.entity && this._hass.states[s.entity] ? parseFloat(this._hass.states[s.entity].state) : null;
       const valEl = this.shadowRoot.getElementById(`val-${i}`);
       if (valEl) valEl.textContent = raw !== null ? (Number.isInteger(raw) ? raw : raw.toFixed(1)) : "--";
       const level = raw !== null ? this.getLevel(raw, s.thresholds || []) : 0;
-      levels.push(level);
       this.shadowRoot.querySelectorAll(`.dot[data-sensor="${i}"]`).forEach(dot => {
         const pos = parseInt(dot.dataset.pos);
         dot.className = "dot";
@@ -183,8 +175,11 @@ class AirQualityCard extends HTMLElement {
       });
     });
 
-    const score  = this.computeScore(levels);
-    const color  = this.scoreLabelColor(score);
+    const scoreEntity = this._config.score_entity;
+    let score = 0;
+    if (scoreEntity && this._hass.states[scoreEntity])
+      score = Math.round(parseFloat(this._hass.states[scoreEntity].state)) || 0;
+    const color = this.scoreLabelColor(score);
     const scoreEl = this.shadowRoot.getElementById("score-val");
     const lblEl   = this.shadowRoot.getElementById("score-lbl");
     const ringEl  = this.shadowRoot.getElementById("ring");

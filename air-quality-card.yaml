@@ -1,6 +1,8 @@
 type: custom:air-quality-card
 title: Living Room
 
+score_entity: sensor.awair_element_score
+
 sensors:
   - entity: sensor.awair_element_temperature
     label: Temp
