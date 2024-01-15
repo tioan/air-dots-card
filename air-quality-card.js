@@ -9,11 +9,11 @@
  */
 
 const AWAIR_DEFAULTS = [
-  { label: "Temp",      unit: "°C",             thresholds: [17, 20, 25, 28]  },
-  { label: "Humidity",  unit: "%",              thresholds: [30, 40, 60, 70]  },
-  { label: "CO\u2082",  unit: "ppm",            thresholds: [700, 1000, 1500, 2000] },
-  { label: "Chemicals", unit: "ppb",            thresholds: [300, 500, 700, 1000]   },
-  { label: "PM2.5",     unit: "\u00b5g/m\u00b3",thresholds: [5, 12, 35, 55]         },
+  { label: "Temp",      unit: "°C",             thresholds: [18, 20, 25, 27]        },
+  { label: "Humidity",  unit: "%",              thresholds: [30, 40, 60, 65]        },
+  { label: "CO\u2082",  unit: "ppm",            thresholds: [600, 1000, 2000, 4500] },
+  { label: "Chemicals", unit: "ppb",            thresholds: [300, 500, 3000, 25000] },
+  { label: "PM2.5",     unit: "\u00b5g/m\u00b3",thresholds: [12, 35, 55, 150]       },
 ];
 
 class AirQualityCard extends HTMLElement {
