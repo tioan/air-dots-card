@@ -123,26 +123,27 @@ class AirQualityCard extends HTMLElement {
 
   set hass(hass) { this._hass = hass; this.updateValues(); }
   getCardSize() { return 4; }
-  _theme() { return this._config.theme || "default"; }
+  _theme()    { return this._config.theme          || "default"; }
+  _position() { return this._config.score_position || "center"; }
 
   render() {
     const theme = this._theme();
     const title = this._config.title || "";
+    const position = this._position();
+    let inner = "";
+    const ringHTML = `<div class="ring-container"><svg class="ring-svg" viewBox="0 0 140 140"><circle class="ring-track" cx="70" cy="70" r="60"/><circle class="ring-progress" cx="70" cy="70" r="60" id="ring"/></svg><div class="ring-inner"><span class="ring-score" id="score-val">--</span><span class="ring-label" id="score-lbl">--</span></div></div>`;
+    if (position === "center") {
+      inner = `<div class="layout-center"><div class="ring-wrap">${ringHTML}</div><div class="sensors-row" id="sensors-row"></div></div>`;
+    } else if (position === "left") {
+      inner = `<div class="layout-left"><div class="ring-wrap">${ringHTML}</div><div class="sensors-row" id="sensors-row"></div></div>`;
+    } else {
+      inner = `<div class="layout-inline"><div class="sensors-row" id="sensors-row"><div class="score-inline-col" id="score-inline-col"><div class="score-inline-name">Score</div><div class="dots-col">${[4,3,2,1,0].map(d=>`<div class="dot" data-scorepos="${d}"></div>`).join("")}</div><div class="score-inline-val" id="score-val">--</div><div class="score-inline-lbl" id="score-lbl">--</div></div></div></div>`;
+    }
     this.shadowRoot.innerHTML = `
       <style>${THEME_CSS[theme] || THEME_CSS.default}</style>
       <ha-card>
         ${title ? `<div class="card-title">${title}</div>` : ""}
-        <div class="ring-wrap"><div class="ring-container">
-          <svg class="ring-svg" viewBox="0 0 140 140">
-            <circle class="ring-track" cx="70" cy="70" r="60"/>
-            <circle class="ring-progress" cx="70" cy="70" r="60" id="ring"/>
-          </svg>
-          <div class="ring-inner">
-            <span class="ring-score" id="score-val">--</span>
-            <span class="ring-label" id="score-lbl">--</span>
-          </div>
-        </div></div>
-        <div class="sensors-row" id="sensors-row"></div>
+        ${inner}
       </ha-card>`;
     this._buildSensorColumns();
   }
@@ -201,7 +202,7 @@ class AirQualityCard extends HTMLElement {
 
   static getConfigElement() { return document.createElement("air-quality-card-editor"); }
   static getStubConfig() {
-    return { title:"Air Quality", theme:"default", score_entity:"", sensors:AWAIR_DEFAULTS.map(d=>({entity:"",...d,thresholds:[...d.thresholds]})) };
+    return { title:"Air Quality", theme:"default", score_position:"center", score_entity:"", sensors:AWAIR_DEFAULTS.map(d=>({entity:"",...d,thresholds:[...d.thresholds]})) };
   }
 }
 

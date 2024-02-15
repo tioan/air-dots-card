@@ -1,5 +1,7 @@
 type: custom:air-quality-card
 title: Living Room
+theme: default
+score_position: center
 
 score_entity: sensor.awair_element_score
 
