@@ -1,7 +1,7 @@
 type: custom:air-quality-card
 title: Living Room
 theme: default
-score_position: center
+score_position: center        # center | left | right | inline_left | inline_right
 
 score_entity: sensor.awair_element_score
 

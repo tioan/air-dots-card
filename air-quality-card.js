@@ -124,7 +124,7 @@ class AirQualityCard extends HTMLElement {
   set hass(hass) { this._hass = hass; this.updateValues(); }
   getCardSize() { return 4; }
   _theme()    { return this._config.theme          || "default"; }
-  _position() { return this._config.score_position || "center"; }
+  _position() { return this._config.score_position || "center"; }  // center|left|right|inline_left|inline_right
 
   render() {
     const theme = this._theme();
@@ -136,7 +136,9 @@ class AirQualityCard extends HTMLElement {
       inner = `<div class="layout-center"><div class="ring-wrap">${ringHTML}</div><div class="sensors-row" id="sensors-row"></div></div>`;
     } else if (position === "left") {
       inner = `<div class="layout-left"><div class="ring-wrap">${ringHTML}</div><div class="sensors-row" id="sensors-row"></div></div>`;
-    } else {
+    } else if (position === "right") {
+      inner = `<div class="layout-right"><div class="sensors-row" id="sensors-row"></div><div class="ring-wrap">${ringHTML}</div></div>`;
+    } else if (position === "inline_left" || position === "inline_right") {
       inner = `<div class="layout-inline"><div class="sensors-row" id="sensors-row"><div class="score-inline-col" id="score-inline-col"><div class="score-inline-name">Score</div><div class="dots-col">${[4,3,2,1,0].map(d=>`<div class="dot" data-scorepos="${d}"></div>`).join("")}</div><div class="score-inline-val" id="score-val">--</div><div class="score-inline-lbl" id="score-lbl">--</div></div></div></div>`;
     }
     this.shadowRoot.innerHTML = `
