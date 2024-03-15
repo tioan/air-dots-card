@@ -1,10 +1,10 @@
 /**
- * Air Quality Card for Home Assistant
+ * Air Dots Card for Home Assistant
  * Themes: default | mushroom | bubble
  *
  * Installation:
- *   1. Copy this file to /config/www/air-quality-card.js
- *   2. Add resource: /local/air-quality-card.js  (JavaScript Module)
+ *   1. Copy this file to /config/www/air-dots-card.js
+ *   2. Add resource: /local/air-dots-card.js  (JavaScript Module)
  *   3. Add card via UI editor or YAML
  */
 
@@ -113,7 +113,7 @@ const THEME_CSS = {
   `,
 };
 
-class AirQualityCard extends HTMLElement {
+class AirDotsCard extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: "open" }); }
 
   setConfig(config) {
@@ -202,15 +202,15 @@ class AirQualityCard extends HTMLElement {
     if (ringEl)  { ringEl.style.strokeDashoffset = 376.99 - (score/100)*376.99; ringEl.style.stroke = color; }
   }
 
-  static getConfigElement() { return document.createElement("air-quality-card-editor"); }
+  static getConfigElement() { return document.createElement("air-dots-card-editor"); }
   static getStubConfig() {
     return { title:"Air Quality", theme:"default", score_position:"center", score_entity:"", sensors:AWAIR_DEFAULTS.map(d=>({entity:"",...d,thresholds:[...d.thresholds]})) };
   }
 }
 
-customElements.define("air-quality-card", AirQualityCard);
+customElements.define("air-dots-card", AirDotsCard);
 
-class AirQualityCardEditor extends HTMLElement {
+class AirDotsCardEditor extends HTMLElement {
   constructor() { super(); this.attachShadow({mode:"open"}); this._config={}; this._hass=null; }
   setConfig(config) { this._config=JSON.parse(JSON.stringify(config)); this._render(); }
   set hass(hass) { this._hass=hass; this.shadowRoot.querySelectorAll("ha-entity-picker").forEach(el=>{el.hass=hass;}); }
@@ -299,7 +299,7 @@ class AirQualityCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("air-quality-card-editor", AirQualityCardEditor);
+customElements.define("air-dots-card-editor", AirDotsCardEditor);
 
 window.customCards = window.customCards || [];
-window.customCards.push({ type:"air-quality-card", name:"Air Quality Card", description:"Awair-inspired air quality card — 3 themes", preview:true });
+window.customCards.push({ type:"air-dots-card", name:"Air Dots Card", description:"Awair-inspired air quality card — 3 themes", preview:true });

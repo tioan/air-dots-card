@@ -1,0 +1,12 @@
+{
+  "name": "Air Dots Card",
+  "description": "Awair-inspired air quality card with dot indicators, score ring and 3 themes for Home Assistant Lovelace",
+  "content_in_root": true,
+  "render_readme": true,
+  "filename": "air-dots-card.js",
+  "homeassistant": "2023.9.0",
+  "domains": [],
+  "country": [],
+  "iot_class": "local_polling",
+  "categories": ["lovelace"]
+}

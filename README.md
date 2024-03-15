@@ -1,4 +1,4 @@
-# Air Quality Card for Home Assistant
+# Air Dots Card for Home Assistant
 
 A custom Lovelace card inspired by the Awair Element air quality monitor UI.
 

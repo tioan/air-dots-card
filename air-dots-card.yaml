@@ -1,4 +1,4 @@
-type: custom:air-quality-card
+type: custom:air-dots-card
 title: Living Room
 theme: default
 score_position: center        # center | left | right | inline_left | inline_right
