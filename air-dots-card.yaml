@@ -1,28 +1,82 @@
-type: custom:air-dots-card
-title: Living Room
-theme: default
-score_position: center        # center | left | right | inline_left | inline_right
+# ─────────────────────────────────────────────────────────────────────────────
+# Air Quality Card – Lovelace YAML Konfiguration
+# Schwellenwerte basieren auf offiziellen Awair-Referenzwerten
+#
+# Installation:
+#   1. air-dots-card.js  →  /config/www/air-dots-card.js kopieren
+#   2. Ressource registrieren: /local/air-dots-card.js (JavaScript-Modul)
+#   3. Diesen YAML-Block in den Dashboard-Editor einfügen
+# ─────────────────────────────────────────────────────────────────────────────
 
-score_entity: sensor.awair_element_score
+type: custom:air-dots-card
+title: Wohnzimmer
+language: auto          # auto (reads HA profile language) | en | de
+
+score_entity: sensor.awair_element_score   # Awair Score (0–100)
 
 sensors:
+
+  # ── Temperatur ──────────────────────────────────────────────────────────────
+  # Symmetrische Skala: 20–25°C optimal, beide Extreme kritisch
+  # Awair-Skala: 8 | 16 | 18 | 20 | 25 | 27 | 29 | 34
   - entity: sensor.awair_element_temperature
     label: Temp
     unit: "°C"
     thresholds: [18, 20, 25, 27]
+    # level 1 (grün)   = 18–25°C  → optimal
+    # level 2 (gelb)   = 16–18°C oder 25–27°C
+    # level 3 (orange) = <16°C oder 27–29°C
+    # level 4 (rot)    = <8°C oder 29–34°C
+    # level 5 (lila)   = Extremwerte
+
+  # ── Luftfeuchtigkeit ────────────────────────────────────────────────────────
+  # Symmetrische Skala: 40–50% optimal, beide Extreme kritisch
+  # Awair-Skala: 14 | 23 | 30 | 40 | 50 | 60 | 65 | 80
   - entity: sensor.awair_element_humidity
     label: Humidity
     unit: "%"
     thresholds: [30, 40, 60, 65]
+    # level 1 (grün)   = 40–60%  → optimal
+    # level 2 (gelb)   = 30–40% oder 60–65%
+    # level 3 (orange) = 23–30% oder 65–80%
+    # level 4 (rot)    = <23% oder >80%
+    # level 5 (lila)   = Extremwerte
+
+  # ── CO₂ ─────────────────────────────────────────────────────────────────────
+  # Lineare Skala: je höher, desto schlechter
+  # Awair-Skala: 0 | 600 | 1000 | 2000 | 4500
   - entity: sensor.awair_element_co2
     label: "CO₂"
     unit: ppm
     thresholds: [600, 1000, 2000, 4500]
+    # level 1 (grün)   = 0–600 ppm    → Ausgezeichnet
+    # level 2 (gelb)   = 600–1000 ppm → Gut
+    # level 3 (orange) = 1000–2000    → Mäßig
+    # level 4 (rot)    = 2000–4500    → Schlecht
+    # level 5 (lila)   = >4500        → Kritisch
+
+  # ── TVOCs / Chemikalien ─────────────────────────────────────────────────────
+  # Lineare Skala: je höher, desto schlechter
+  # Awair-Skala: 0 | 300 | 500 | 3000 | 25000
   - entity: sensor.awair_element_voc
     label: Chemicals
     unit: ppb
     thresholds: [300, 500, 3000, 25000]
+    # level 1 (grün)   = 0–300 ppb      → Ausgezeichnet
+    # level 2 (gelb)   = 300–500 ppb    → Gut
+    # level 3 (orange) = 500–3000 ppb   → Mäßig
+    # level 4 (rot)    = 3000–25000 ppb → Schlecht
+    # level 5 (lila)   = >25000 ppb     → Kritisch
+
+  # ── PM2.5 / Feinstaub ───────────────────────────────────────────────────────
+  # Lineare Skala: je höher, desto schlechter
+  # Awair-Skala: 0 | 12 | 35 | 55 | 150
   - entity: sensor.awair_element_pm25
     label: PM2.5
     unit: "µg/m³"
     thresholds: [12, 35, 55, 150]
+    # level 1 (grün)   = 0–12 µg/m³  → Ausgezeichnet
+    # level 2 (gelb)   = 12–35        → Gut
+    # level 3 (orange) = 35–55        → Mäßig
+    # level 4 (rot)    = 55–150       → Schlecht
+    # level 5 (lila)   = >150         → Kritisch
