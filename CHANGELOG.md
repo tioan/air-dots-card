@@ -1,7 +1,10 @@
 # Changelog — Air Dots Card
 
-All notable changes to this project are documented here.
+All notable changes to this project are documented here.  
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+Repository: [codeberg.org/tioan/air-dots-card](https://codeberg.org/tioan/air-dots-card)  
+Created with [Claude Sonnet 4.6](https://claude.ai) by Anthropic.
 
 Types of changes:
 - **Added** — new features

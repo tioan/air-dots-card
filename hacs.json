@@ -8,5 +8,6 @@
   "domains": [],
   "country": [],
   "iot_class": "local_polling",
-  "categories": ["lovelace"]
+  "categories": ["lovelace"],
+  "repository": "https://codeberg.org/tioan/air-dots-card"
 }
