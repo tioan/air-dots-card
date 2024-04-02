@@ -1,0 +1,19 @@
+# Unused screenshots (not referenced in README)
+readme-assets/preview-both.png
+readme-assets/preview-good.png
+readme-assets/preview-poor.png
+readme-assets/theme-bubble.png
+readme-assets/theme-bubble-inline.png
+readme-assets/theme-default.png
+readme-assets/theme-default-inline.png
+readme-assets/theme-mushroom.png
+readme-assets/theme-mushroom-inline.png
+readme-assets/thresholds.png
+readme-assets/ui-editor.png
+readme-assets/ui-editor-en.png
+readme-assets/ui-editor-de.png
+
+# OS & editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
