@@ -20,6 +20,22 @@ Types of changes:
 
 ---
 
+## [0.7.0] — GitHub mirror & HACS fix
+
+### Added
+- GitHub mirror at [github.com/tioan/air-dots-card](https://github.com/tioan/air-dots-card)
+  for HACS compatibility (HACS requires GitHub)
+- GitHub badge in README header
+
+### Changed
+- HACS installation URL in README changed from Codeberg to GitHub
+- Credits section updated to reference both Codeberg (primary) and GitHub (mirror)
+
+### Removed
+- `repository` field from `hacs.json` — field is not valid for HACS custom repositories
+
+---
+
 ## [0.6.0] — Internationalization (i18n)
 
 ### Added
