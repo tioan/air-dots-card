@@ -357,10 +357,10 @@ class AirDotsCard extends HTMLElement {
     const t = this._t();
     return `
       <div class="score-inline-col" id="score-inline-col">
-        <div class="score-inline-name">${t.score_col_name}</div>
         <div class="dots-col">
           ${[4,3,2,1,0].map(d => `<div class="dot" data-scorepos="${d}"></div>`).join("")}
         </div>
+        <div class="score-inline-name">${t.score_col_name}</div>
         <div class="score-inline-val" id="score-val">--</div>
         <div class="score-inline-lbl" id="score-lbl">--</div>
       </div>`;
@@ -496,8 +496,8 @@ class AirDotsCard extends HTMLElement {
       const ringEl = this.shadowRoot.getElementById("ring");
       if (ringEl) { ringEl.style.strokeDashoffset = offset; ringEl.style.stroke = color; }
     } else {
-      // Color inline score dots
-      const level = score >= 75 ? 1 : score >= 55 ? 2 : score >= 35 ? 3 : 4;
+      // Color inline score dots — 5 levels matching scoreLabel thresholds
+      const level = score >= 90 ? 1 : score >= 75 ? 2 : score >= 55 ? 3 : score >= 35 ? 4 : 5;
       this.shadowRoot.querySelectorAll(".dot[data-scorepos]").forEach(dot => {
         const pos = parseInt(dot.dataset.scorepos);
         dot.style.background = pos < level ? levelColor(pos + 1, theme) : "";
