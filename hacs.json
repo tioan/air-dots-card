@@ -4,6 +4,5 @@
   "content_in_root": true,
   "render_readme": true,
   "filename": "air-dots-card.js",
-  "homeassistant": "2023.9.0",
-  "repository": "https://codeberg.org/tioan/air-dots-card"
+  "homeassistant": "2023.9.0"
 }

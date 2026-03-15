@@ -2,6 +2,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![HA minimum version](https://img.shields.io/badge/Home%20Assistant-%3E%3D2023.9-blue.svg)](https://www.home-assistant.io/)
+[![GitHub](https://img.shields.io/badge/GitHub-tioan%2Fair--dots--card-black.svg?logo=github)](https://github.com/tioan/air-dots-card)
 [![Codeberg](https://img.shields.io/badge/Codeberg-tioan%2Fair--dots--card-blue.svg?logo=codeberg)](https://codeberg.org/tioan/air-dots-card)
 [![Created with Claude](https://img.shields.io/badge/Created%20with-Claude%20Sonnet%204.6-blueviolet.svg?logo=anthropic)](https://claude.ai)
 
@@ -78,7 +79,7 @@ Displays up to 5 sensors with a **dot-bar indicator**, color-coded by severity, 
 
 1. Open HACS in Home Assistant
 2. Go to **Frontend** → click ⋮ → **Custom repositories**
-3. Add `https://codeberg.org/tioan/air-dots-card` with category **Lovelace**
+3. Add `https://github.com/tioan/air-dots-card` with category **Lovelace**
 4. Search for **Air Dots Card** and install it
 5. Hard-reload the browser (`Ctrl+Shift+R`)
 
@@ -255,4 +256,4 @@ MIT — free to use, modify and share.
 This card was developed interactively with **[Claude Sonnet 4.6](https://claude.ai)** by Anthropic.  
 The design is inspired by the [Awair Element](https://www.getawair.com/) air quality monitor UI.
 
-Source code and releases: [codeberg.org/tioan/air-dots-card](https://codeberg.org/tioan/air-dots-card)
+Source code: [codeberg.org/tioan/air-dots-card](https://codeberg.org/tioan/air-dots-card) (mirror: [github.com/tioan/air-dots-card](https://github.com/tioan/air-dots-card))
