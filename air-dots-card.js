@@ -202,7 +202,7 @@ const THEME_CSS = {
     .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
     .layout-left .ring-container, .layout-right .ring-container { position:relative; width:110px; height:110px; }
     .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1.2; }
+    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; }
     .score-inline-val { font-size:26px; font-weight:500; color:var(--aq-text); line-height:1; }
     .score-inline-lbl { font-size:10px; margin-top:3px; }
     .score-inline-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; }
@@ -244,7 +244,7 @@ const THEME_CSS = {
     .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
     .layout-left .ring-container, .layout-right .ring-container { position:relative; width:90px; height:90px; }
     .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1.2; border-radius:8px; padding:6px 2px; }
+    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; border-radius:8px; padding:6px 2px; }
     .score-inline-val { font-size:22px; font-weight:500; color:var(--aq-text); line-height:1; }
     .score-inline-lbl { font-size:10px; margin-top:2px; }
     .score-inline-name { font-size:10px; color:var(--aq-muted); margin-bottom:3px; }
@@ -286,7 +286,7 @@ const THEME_CSS = {
     .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
     .layout-left .ring-container, .layout-right .ring-container { position:relative; width:84px; height:84px; }
     .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1.2; background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; }
+    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; }
     .score-inline-val { font-size:20px; font-weight:600; color:var(--aq-text); line-height:1; }
     .score-inline-lbl { font-size:9px; margin-top:2px; font-weight:500; letter-spacing:.04em; }
     .score-inline-name { font-size:9px; color:var(--aq-muted); margin-bottom:3px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
