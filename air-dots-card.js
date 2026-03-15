@@ -392,6 +392,20 @@ class AirDotsCard extends HTMLElement {
       </ha-card>`;
 
     this._buildSensorColumns();
+
+    if (isInline) {
+      const scoreCol = this.shadowRoot.getElementById("score-inline-col");
+      if (scoreCol) {
+        scoreCol.style.cursor = "pointer";
+        scoreCol.addEventListener("click", () => {
+          const entity = this._config.score_entity;
+          if (this._hass && entity)
+            this.dispatchEvent(new CustomEvent("hass-more-info", {
+              bubbles: true, composed: true, detail: { entityId: entity },
+            }));
+        });
+      }
+    }
   }
 
   _buildSensorColumns() {
