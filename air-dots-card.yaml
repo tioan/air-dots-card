@@ -23,6 +23,7 @@ sensors:
     label: Temp
     unit: "°C"
     thresholds: [18, 20, 25, 27]
+    symmetric: true
     # level 1 (grün)   = 18–25°C  → optimal
     # level 2 (gelb)   = 16–18°C oder 25–27°C
     # level 3 (orange) = <16°C oder 27–29°C
@@ -36,6 +37,7 @@ sensors:
     label: Humidity
     unit: "%"
     thresholds: [30, 40, 60, 65]
+    symmetric: true
     # level 1 (grün)   = 40–60%  → optimal
     # level 2 (gelb)   = 30–40% oder 60–65%
     # level 3 (orange) = 23–30% oder 65–80%

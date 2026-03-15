@@ -159,11 +159,13 @@ sensors:
     label: Temp
     unit: "°C"
     thresholds: [18, 20, 25, 27]
+    symmetric: true
 
   - entity: sensor.awair_element_humidity
     label: Humidity
     unit: "%"
     thresholds: [30, 40, 60, 65]
+    symmetric: true
 
   - entity: sensor.awair_element_co2
     label: "CO₂"
@@ -199,7 +201,8 @@ sensors:
 | `entity` | string | ✅ | Entity ID |
 | `label` | string | ✅ | Display name |
 | `unit` | string | ✅ | Unit string |
-| `thresholds` | list | ✅ | 4 values → 5 severity levels |
+| `thresholds` | list | ✅ | 4 boundary values (see below) |
+| `symmetric` | bool | — | `true` for sensors where the optimal range is in the center (temp, humidity). Thresholds define `[low_bad, low_ok, high_ok, high_bad]`. Default: `false` (linear scale, higher = worse). |
 
 > **Note:** `mushroom` and `bubble` themes inherit HA CSS variables automatically — no extra integration needed.
 

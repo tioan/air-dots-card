@@ -45,9 +45,13 @@ const TRANSLATIONS = {
     lbl_unit:        "Unit",
     lbl_unit_ph:     "e.g. ppm",
     lbl_thresholds:  "Thresholds",
-    hint_thresholds: "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
-    lbl_level:       "Level",
-    btn_add:         "+ Add sensor",
+    hint_thresholds:     "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
+    hint_thresholds_sym: "(🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴)",
+    lbl_level:           "Level",
+    lbl_level_sym:       ["🔴→🟡 low", "🟡→🟢 low", "🟢→🟡 high", "🟡→🔴 high"],
+    lbl_symmetric:       "Symmetric scale",
+    hint_symmetric:      "Optimal in center range (e.g. temp, humidity)",
+    btn_add:             "+ Add sensor",
     btn_up:          "↑",
     btn_down:        "↓",
     btn_remove:      "✕",
@@ -85,9 +89,13 @@ const TRANSLATIONS = {
     lbl_unit:        "Einheit",
     lbl_unit_ph:     "z. B. ppm",
     lbl_thresholds:  "Schwellenwerte",
-    hint_thresholds: "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
-    lbl_level:       "Level",
-    btn_add:         "+ Sensor hinzufügen",
+    hint_thresholds:     "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
+    hint_thresholds_sym: "(🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴)",
+    lbl_level:           "Level",
+    lbl_level_sym:       ["🔴→🟡 unten", "🟡→🟢 unten", "🟢→🟡 oben", "🟡→🔴 oben"],
+    lbl_symmetric:       "Symmetrische Skala",
+    hint_symmetric:      "Optimal im Mittelbereich (z. B. Temp, Luftfeuchtigkeit)",
+    btn_add:             "+ Sensor hinzufügen",
     btn_up:          "↑",
     btn_down:        "↓",
     btn_remove:      "✕",
@@ -120,17 +128,30 @@ function getT(langConfig, hass) {
 // ─── Awair sensor defaults ─────────────────────────────────────────────────────
 
 const AWAIR_DEFAULTS = [
-  { label: "Temp",      unit: "°C",             thresholds: [18, 20, 25, 27]        },
-  { label: "Humidity",  unit: "%",              thresholds: [30, 40, 60, 65]        },
-  { label: "CO\u2082",  unit: "ppm",            thresholds: [600, 1000, 2000, 4500] },
-  { label: "Chemicals", unit: "ppb",            thresholds: [300, 500, 3000, 25000] },
-  { label: "PM2.5",     unit: "\u00b5g/m\u00b3",thresholds: [12, 35, 55, 150]       },
+  { label: "Temp",      unit: "°C",              thresholds: [18, 20, 25, 27],        symmetric: true },
+  { label: "Humidity",  unit: "%",               thresholds: [30, 40, 60, 65],        symmetric: true },
+  { label: "CO\u2082",  unit: "ppm",             thresholds: [600, 1000, 2000, 4500]                  },
+  { label: "Chemicals", unit: "ppb",             thresholds: [300, 500, 3000, 25000]                  },
+  { label: "PM2.5",     unit: "\u00b5g/m\u00b3", thresholds: [12, 35, 55, 150]                        },
 ];
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
-/** Map a numeric sensor value to severity level 1–5 based on threshold array. */
-function getLevel(value, thresholds) {
+/**
+ * Map a numeric sensor value to severity level 1–5.
+ * Linear mode (default): higher value = worse (CO₂, VOCs, PM2.5).
+ * Symmetric mode: optimal range is in the center; both extremes are bad (temp, humidity).
+ *   thresholds = [low_bad, low_ok, high_ok, high_bad]
+ *   level 1 (green):  low_ok  ≤ value ≤ high_ok
+ *   level 2 (yellow): low_bad ≤ value <  low_ok  or  high_ok < value ≤ high_bad
+ *   level 3 (orange): value < low_bad or value > high_bad
+ */
+function getLevel(value, thresholds, symmetric = false) {
+  if (symmetric && thresholds.length >= 4) {
+    if (value >= thresholds[1] && value <= thresholds[2]) return 1;
+    if (value >= thresholds[0] && value <= thresholds[3]) return 2;
+    return 3;
+  }
   let level = 1;
   for (const t of thresholds) { if (value > t) level++; else break; }
   return Math.min(level, 5);
@@ -448,7 +469,7 @@ class AirDotsCard extends HTMLElement {
       const raw   = s.entity && this._hass.states[s.entity] ? parseFloat(this._hass.states[s.entity].state) : null;
       const valEl = this.shadowRoot.getElementById(`val-${i}`);
       if (valEl) valEl.textContent = raw !== null ? (Number.isInteger(raw) ? raw : raw.toFixed(1)) : "--";
-      const level = raw !== null ? getLevel(raw, s.thresholds || []) : 0;
+      const level = raw !== null ? getLevel(raw, s.thresholds || [], !!s.symmetric) : 0;
       this.shadowRoot.querySelectorAll(`.dot[data-sensor="${i}"]`).forEach(dot => {
         const pos = parseInt(dot.dataset.pos);
         dot.style.background = pos < level ? levelColor(level, theme) : "";
@@ -699,11 +720,18 @@ class AirDotsCardEditor extends HTMLElement {
           </div>
         </div>
         <div class="field">
-          <label>${t.lbl_thresholds} <span style="font-weight:400">${t.hint_thresholds}</span></label>
+          <label>
+            <input type="checkbox" data-bool-key="symmetric" ${s.symmetric ? "checked" : ""} style="margin-right:4px">
+            ${t.lbl_symmetric}
+          </label>
+          <div class="hint">${t.hint_symmetric}</div>
+        </div>
+        <div class="field">
+          <label>${t.lbl_thresholds} <span style="font-weight:400">${s.symmetric ? t.hint_thresholds_sym : t.hint_thresholds}</span></label>
           <div class="four-col">
             ${[0,1,2,3].map(ti => `
               <div>
-                <label style="font-size:11px">${t.lbl_level} ${ti+1}→${ti+2}</label>
+                <label style="font-size:11px">${s.symmetric ? t.lbl_level_sym[ti] : `${t.lbl_level} ${ti+1}→${ti+2}`}</label>
                 <input type="number" data-ti="${ti}" value="${(s.thresholds||[])[ti] ?? ""}">
               </div>`).join("")}
           </div>
@@ -715,6 +743,10 @@ class AirDotsCardEditor extends HTMLElement {
 
       card.querySelectorAll("input[data-key]").forEach(inp => {
         inp.addEventListener("change", e => { this._set(`sensors.${i}.${e.target.dataset.key}`, e.target.value); });
+      });
+
+      card.querySelectorAll("input[data-bool-key]").forEach(inp => {
+        inp.addEventListener("change", e => { this._set(`sensors.${i}.${e.target.dataset.boolKey}`, e.target.checked); });
       });
 
       card.querySelectorAll("input[data-ti]").forEach(inp => {
