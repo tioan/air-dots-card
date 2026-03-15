@@ -20,6 +20,65 @@ Types of changes:
 
 ---
 
+## [0.8.4] — Inline score clickable
+
+### Fixed
+- Inline score column (`inline_left` / `inline_right`) is now clickable and opens
+  the score entity detail dialog, consistent with all sensor columns
+
+---
+
+## [0.8.3] — Inline score column width
+
+### Fixed
+- Inline score column width normalized to `flex:1` (was `flex:1.2`),
+  so it matches the width of all sensor columns in all three themes
+
+---
+
+## [0.8.2] — Inline score column layout & level alignment
+
+### Fixed
+- Score label ("Score") moved below the dot bar in inline positions,
+  consistent with sensor columns (dots → label → value)
+- Inline score dot levels now use 5 tiers matching `scoreLabel` thresholds
+  (`>=90 / >=75 / >=55 / >=35 / <35`) instead of the previous 4-tier scale —
+  score 87 = "Gut" now correctly shows 2 dots instead of 1
+
+---
+
+## [0.8.1] — Graduated dot colors
+
+### Changed
+- Each dot now always shows its own fixed color based on its position:
+  bottom → green · yellow · orange · red · purple (top).
+  Previously all lit dots showed the same color (the level color of the current reading).
+  Applies to both sensor columns and inline score column.
+
+---
+
+## [0.8.0] — Symmetric scale for temperature & humidity
+
+### Added
+- `symmetric: true` sensor option — for sensors where the optimal range is in the
+  center (e.g. temp, humidity). Thresholds define `[low_bad, low_ok, high_ok, high_bad]`:
+  level 1 (green) if value is between `low_ok` and `high_ok`;
+  level 2 (yellow) if between `low_bad`–`low_ok` or `high_ok`–`high_bad`;
+  level 3 (orange) outside the outer bounds.
+- Symmetric checkbox in the UI editor per sensor with adapted threshold labels and hints
+- Translations for `symmetric` option in English and German
+
+### Fixed
+- Temperature and humidity sensors showed wrong (orange) dots for optimal values
+  because `getLevel()` treated all sensors as linear scales.
+  `AWAIR_DEFAULTS` now sets `symmetric: true` for temperature and humidity.
+
+### Changed
+- `air-dots-card.yaml` example: `symmetric: true` added to temperature and humidity sensors
+- README: `symmetric` option documented in sensor options table and YAML example
+
+---
+
 ## [0.7.0] — GitHub mirror & HACS fix
 
 ### Added
