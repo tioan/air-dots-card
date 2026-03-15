@@ -472,7 +472,7 @@ class AirDotsCard extends HTMLElement {
       const level = raw !== null ? getLevel(raw, s.thresholds || [], !!s.symmetric) : 0;
       this.shadowRoot.querySelectorAll(`.dot[data-sensor="${i}"]`).forEach(dot => {
         const pos = parseInt(dot.dataset.pos);
-        dot.style.background = pos < level ? levelColor(level, theme) : "";
+        dot.style.background = pos < level ? levelColor(pos + 1, theme) : "";
       });
     });
 
@@ -500,7 +500,7 @@ class AirDotsCard extends HTMLElement {
       const level = score >= 75 ? 1 : score >= 55 ? 2 : score >= 35 ? 3 : 4;
       this.shadowRoot.querySelectorAll(".dot[data-scorepos]").forEach(dot => {
         const pos = parseInt(dot.dataset.scorepos);
-        dot.style.background = pos < level ? color : "";
+        dot.style.background = pos < level ? levelColor(pos + 1, theme) : "";
       });
     }
   }
