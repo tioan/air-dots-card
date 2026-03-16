@@ -669,7 +669,7 @@ class AirDotsCardEditor extends HTMLElement {
         </div>
         <div class="field">
           <label>${t.lbl_score_entity}</label>
-          <ha-entity-picker id="picker-score" allow-custom-entity .value="${c.score_entity || ""}"></ha-entity-picker>
+          <ha-entity-picker id="picker-score" allow-custom-entity></ha-entity-picker>
           <div class="hint">${t.hint_score}</div>
         </div>
       </div>
@@ -703,6 +703,7 @@ class AirDotsCardEditor extends HTMLElement {
     // Score entity picker
     const scorePicker = this.shadowRoot.getElementById("picker-score");
     if (this._hass) scorePicker.hass = this._hass;
+    scorePicker.value = c.score_entity || "";
     scorePicker.addEventListener("value-changed", e => { this._set("score_entity", e.detail.value); });
 
     // Build sensor cards
@@ -721,7 +722,7 @@ class AirDotsCardEditor extends HTMLElement {
         </div>
         <div class="field">
           <label>${t.lbl_entity}</label>
-          <ha-entity-picker allow-custom-entity .value="${s.entity || ""}"></ha-entity-picker>
+          <ha-entity-picker allow-custom-entity></ha-entity-picker>
         </div>
         <div class="two-col">
           <div class="field">
@@ -751,10 +752,6 @@ class AirDotsCardEditor extends HTMLElement {
           </div>
         </div>`;
 
-      const picker = card.querySelector("ha-entity-picker");
-      if (this._hass) picker.hass = this._hass;
-      picker.addEventListener("value-changed", e => { this._set(`sensors.${i}.entity`, e.detail.value); });
-
       card.querySelectorAll("input[data-key]").forEach(inp => {
         inp.addEventListener("change", e => { this._set(`sensors.${i}.${e.target.dataset.key}`, e.target.value); });
       });
@@ -776,6 +773,12 @@ class AirDotsCardEditor extends HTMLElement {
       card.querySelector("[data-del]").addEventListener("click",     () => { this._removeSensor(i); });
 
       list.appendChild(card);
+
+      // Set picker properties AFTER the card is in the DOM so the element is connected
+      const picker = card.querySelector("ha-entity-picker");
+      if (this._hass) picker.hass = this._hass;
+      picker.value = s.entity || "";
+      picker.addEventListener("value-changed", e => { this._set(`sensors.${i}.entity`, e.detail.value); });
     });
 
     this.shadowRoot.getElementById("btn-add").addEventListener("click", () => { this._addSensor(); });

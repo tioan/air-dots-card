@@ -20,6 +20,17 @@ Types of changes:
 
 ---
 
+## [0.8.5] — Entity picker fix
+
+### Fixed
+- Entity pickers in the card editor now correctly display the currently selected
+  entity and save new selections: `value` property is now set imperatively instead
+  of via the `.value` Lit-syntax attribute (which is invalid in plain `innerHTML`)
+- Sensor entity pickers are now connected to the DOM **before** `hass` and `value`
+  are assigned, ensuring the element is fully initialised when properties are set
+
+---
+
 ## [0.8.4] — Inline score clickable
 
 ### Fixed
