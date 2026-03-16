@@ -135,6 +135,21 @@ const AWAIR_DEFAULTS = [
   { label: "PM2.5",     unit: "\u00b5g/m\u00b3", thresholds: [12, 35, 55, 150]                        },
 ];
 
+/**
+ * Maps a sensor unit string to the HA device classes used to filter the entity
+ * picker in the editor.  Sensors without a device_class are always shown so that
+ * Awair-style integrations (which often omit device_class) remain selectable.
+ */
+const UNIT_TO_DEVICE_CLASS = {
+  "\u00b0C": ["temperature"],
+  "\u00b0F": ["temperature"],
+  "K":       ["temperature"],
+  "%":       ["humidity"],
+  "ppm":     ["carbon_dioxide"],
+  "ppb":     ["volatile_organic_compounds", "volatile_organic_compounds_parts"],
+  "\u00b5g/m\u00b3": ["pm25"],
+};
+
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 /**
@@ -703,6 +718,7 @@ class AirDotsCardEditor extends HTMLElement {
     // Score entity picker
     const scorePicker = this.shadowRoot.getElementById("picker-score");
     if (this._hass) scorePicker.hass = this._hass;
+    scorePicker.includeDomains = ["sensor"];
     scorePicker.value = c.score_entity || "";
     scorePicker.addEventListener("value-changed", e => { this._set("score_entity", e.detail.value); });
 
@@ -777,6 +793,18 @@ class AirDotsCardEditor extends HTMLElement {
       // Set picker properties AFTER the card is in the DOM so the element is connected
       const picker = card.querySelector("ha-entity-picker");
       if (this._hass) picker.hass = this._hass;
+      const dcList = UNIT_TO_DEVICE_CLASS[s.unit || ""];
+      if (dcList) {
+        // Show only sensor-domain entities whose device_class matches, plus
+        // entities that have no device_class at all (common with Awair integration)
+        picker.entityFilter = (entity) => {
+          if (!entity.entity_id.startsWith("sensor.")) return false;
+          const dc = entity.attributes?.device_class;
+          return !dc || dcList.includes(dc);
+        };
+      } else {
+        picker.includeDomains = ["sensor"];
+      }
       picker.value = s.entity || "";
       picker.addEventListener("value-changed", e => { this._set(`sensors.${i}.entity`, e.detail.value); });
     });
