@@ -20,6 +20,17 @@ Types of changes:
 
 ---
 
+## [0.8.8] — Restore entity picker visibility
+
+### Fixed
+- Entity picker invisible after v0.8.6/v0.8.7: setting `includeDomains` or
+  `includeDeviceClasses` on `ha-entity-picker` triggers an internal Lit re-render
+  that leaves the component with zero visible height; both properties removed
+- Entity-type filtering (introduced in v0.8.6) reverted — all entity pickers
+  now show the full entity list (no domain or device-class restriction)
+
+---
+
 ## [0.8.7] — Fix entity picker regression
 
 ### Fixed
