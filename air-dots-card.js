@@ -136,9 +136,8 @@ const AWAIR_DEFAULTS = [
 ];
 
 /**
- * Maps a sensor unit string to the HA device classes used to filter the entity
- * picker in the editor.  Sensors without a device_class are always shown so that
- * Awair-style integrations (which often omit device_class) remain selectable.
+ * Maps a sensor unit string to the HA device classes used for includeDeviceClasses
+ * on the entity picker in the editor.  All pickers also have includeDomains=["sensor"].
  */
 const UNIT_TO_DEVICE_CLASS = {
   "\u00b0C": ["temperature"],
@@ -793,18 +792,9 @@ class AirDotsCardEditor extends HTMLElement {
       // Set picker properties AFTER the card is in the DOM so the element is connected
       const picker = card.querySelector("ha-entity-picker");
       if (this._hass) picker.hass = this._hass;
+      picker.includeDomains = ["sensor"];
       const dcList = UNIT_TO_DEVICE_CLASS[s.unit || ""];
-      if (dcList) {
-        // Show only sensor-domain entities whose device_class matches, plus
-        // entities that have no device_class at all (common with Awair integration)
-        picker.entityFilter = (entity) => {
-          if (!entity.entity_id.startsWith("sensor.")) return false;
-          const dc = entity.attributes?.device_class;
-          return !dc || dcList.includes(dc);
-        };
-      } else {
-        picker.includeDomains = ["sensor"];
-      }
+      if (dcList) picker.includeDeviceClasses = dcList;
       picker.value = s.entity || "";
       picker.addEventListener("value-changed", e => { this._set(`sensors.${i}.entity`, e.detail.value); });
     });

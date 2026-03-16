@@ -20,14 +20,27 @@ Types of changes:
 
 ---
 
+## [0.8.7] — Fix entity picker regression
+
+### Fixed
+- Entity pickers broken by v0.8.6: replaced unstable `entityFilter` function
+  property with the official `includeDeviceClasses` API; `entityFilter` is not
+  a stable public property of `ha-entity-picker` across all HA versions and
+  caused the picker to malfunction
+
+### Changed
+- Sensor entity pickers now use `includeDeviceClasses` (HA standard API) for
+  device-class filtering instead of `entityFilter`; all pickers additionally
+  restrict to the `sensor` domain via `includeDomains`
+
+---
+
 ## [0.8.6] — Smart entity picker filtering
 
 ### Changed
 - Sensor entity pickers in the editor now filter entities by type based on the
   sensor's configured unit: `°C`/`°F` → temperature, `%` → humidity,
   `ppm` → CO₂, `ppb` → VOCs, `µg/m³` → PM2.5
-- Sensors without a `device_class` (e.g. from the Awair integration) remain
-  visible so no valid entities are accidentally hidden
 - Score entity picker is now restricted to the `sensor` domain
 - Custom sensors with an unknown unit fall back to showing all `sensor`-domain
   entities
