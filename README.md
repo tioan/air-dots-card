@@ -3,7 +3,6 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![HA minimum version](https://img.shields.io/badge/Home%20Assistant-%3E%3D2026.5-blue.svg)](https://www.home-assistant.io/)
 [![GitHub](https://img.shields.io/badge/GitHub-tioan%2Fair--dots--card-black.svg?logo=github)](https://github.com/tioan/air-dots-card)
-[![Codeberg](https://img.shields.io/badge/Codeberg-tioan%2Fair--dots--card-blue.svg?logo=codeberg)](https://codeberg.org/tioan/air-dots-card)
 [![Created with Claude](https://img.shields.io/badge/Created%20with-Claude%20Sonnet%204.6-blueviolet.svg?logo=anthropic)](https://claude.ai)
 
 A custom Lovelace card inspired by the Awair air quality monitor UI.  
@@ -296,4 +295,4 @@ MIT — free to use, modify and share.
 This card was developed interactively with **[Claude Sonnet 4.6](https://claude.ai)** by Anthropic.  
 The design is inspired by the [Awair Element](https://www.getawair.com/) air quality monitor UI.
 
-Source code: [codeberg.org/tioan/air-dots-card](https://codeberg.org/tioan/air-dots-card) (mirror: [github.com/tioan/air-dots-card](https://github.com/tioan/air-dots-card))
+Source code: [github.com/tioan/air-dots-card](https://github.com/tioan/air-dots-card)
