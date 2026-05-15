@@ -20,6 +20,32 @@ Types of changes:
 
 ---
 
+## [0.9.4] — Revert sensor dot inversion (back to Awair Element style)
+
+### Reverted
+- v0.9.3 inverted the sensor dot semantics to match the score column
+  (more dots = better, uniform color). This deviated from the Awair
+  Element visual that this card is modeled after, where each dot has
+  a fixed color by position (bottom → top: green → yellow → orange →
+  red → purple) and severity "fills the bar from below". Sensor
+  columns are restored to that Awair-style danger-meter behaviour.
+
+### Note on remaining asymmetry
+- The score column keeps the v0.9.1 "more dots = better" semantic
+  (score 100 → 5 dots, score 0 → 1 dot) because the score itself is
+  inverted relative to sensors (high score = good, high sensor reading
+  often = bad). Sensors and score therefore intentionally use
+  different visual metaphors: sensors are danger meters, the score is
+  a quality meter.
+
+### Implication for symmetric sensors
+- Symmetric sensors (e.g. humidity at 54% in `[30, 40, 60, 65]`) show
+  **1 dot (green)** at level 1 (optimal). This matches the Awair
+  Element behaviour where an optimal reading shows a single small
+  green indicator rather than a full bar.
+
+---
+
 ## [0.9.3] — Unify sensor + score dots as quality meters
 
 ### Fixed

@@ -314,20 +314,18 @@ class AirDotsCard extends LitElement {
     const label    = s.label || stateObj?.attributes?.friendly_name || s.entity || "Sensor";
     const unit     = s.unit ?? stateObj?.attributes?.unit_of_measurement ?? "";
 
-    // Quality-meter semantic (matches the score column since v0.9.1):
-    // level 1 (best) → 5 dots, level 5 (worst) → 1 dot. All lit dots share
-    // the current level's severity color so an optimal reading visually
-    // reads as a full green bar, not as a single lonely dot.
-    const litCount = level > 0 ? 6 - level : 0;
-    const dotColor = level > 0 ? levelColor(level, theme) : "";
-
+    // Awair Element "danger meter" semantic: more lit dots = worse.
+    // Each dot has a fixed color by position (bottom → top:
+    // green → yellow → orange → red → purple). Level N lights the
+    // bottom N dots. The score column uses a different semantic
+    // (more = better) since v0.9.1 because the score is inverted.
     return html`
       <div class="sensor-col"
            @click=${() => handleAction(this, this.hass, s.tap_action, s.entity)}>
         <div class="dots-col">
           ${[4,3,2,1,0].map(d => html`
             <div class="dot"
-                 style=${d < litCount ? `background:${dotColor}` : ""}></div>
+                 style=${d < level ? `background:${levelColor(d + 1, theme)}` : ""}></div>
           `)}
         </div>
         <div class="sensor-name">${label}</div>

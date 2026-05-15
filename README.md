@@ -62,9 +62,10 @@ Displays up to 5 sensors with a **dot-bar indicator**, color-coded by severity, 
 
 - Score ring or inline score column with color-coded severity label
 - Up to 5 sensor columns with 5-dot bar indicators
-- **Quality-meter semantic:** more lit dots = better. Optimal readings
-  fill the bar, critical readings show only one dot. Color matches the
-  current severity level (🟢 excellent / 🟡 good / 🟠 fair / 🔴 poor / 🟣 critical)
+- **Sensor dots** follow the Awair Element style: more lit dots = worse,
+  each dot has a fixed color by position (🟢 → 🟡 → 🟠 → 🔴 → 🟣 from bottom to top)
+- **Score dots** (inline positions) follow the inverted score semantic:
+  more lit dots = better, all lit dots share the current score's color
 - Three visual themes: `default`, `mushroom`, `bubble`
 - Five score positions: `center`, `left`, `right`, `inline_left`, `inline_right`
 - Full UI editor — configure everything without touching YAML
