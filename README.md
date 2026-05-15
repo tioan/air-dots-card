@@ -62,7 +62,9 @@ Displays up to 5 sensors with a **dot-bar indicator**, color-coded by severity, 
 
 - Score ring or inline score column with color-coded severity label
 - Up to 5 sensor columns with 5-dot bar indicators
-- Dot color reflects severity: 🟢 → 🟡 → 🟠 → 🔴 → 🟣
+- **Quality-meter semantic:** more lit dots = better. Optimal readings
+  fill the bar, critical readings show only one dot. Color matches the
+  current severity level (🟢 excellent / 🟡 good / 🟠 fair / 🔴 poor / 🟣 critical)
 - Three visual themes: `default`, `mushroom`, `bubble`
 - Five score positions: `center`, `left`, `right`, `inline_left`, `inline_right`
 - Full UI editor — configure everything without touching YAML

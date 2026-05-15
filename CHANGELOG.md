@@ -20,6 +20,44 @@ Types of changes:
 
 ---
 
+## [0.9.3] — Unify sensor + score dots as quality meters
+
+### Fixed
+- Symmetric sensors (e.g. humidity at 54%, temperature at 22°C) showed
+  only **one** dot for an optimal reading because the previous
+  visualization treated the dot bar as a "danger meter" (more dots =
+  worse, level 1 = 1 dot). For a symmetric sensor that *peaks* at
+  level 1, this made the perfect value look like the bar was nearly
+  empty. Optimal readings now fill the entire bar (5 dots).
+
+### Changed
+- **All dot bars (sensors *and* score) now share a single semantic:**
+  more lit dots = better. The number of lit dots is `6 − level`
+  (level 1 → 5 dots, level 5 → 1 dot). All lit dots share the same
+  color, matching the current level's severity tier (green / yellow /
+  orange / red / purple). The score column already worked this way
+  since v0.9.1; sensor columns are now consistent with it.
+- This replaces the v0.8.1 "graduated colors per dot position" design
+  for sensor columns. That design conflicted with the new score
+  semantic introduced in v0.9.1 and made symmetric sensors confusing.
+
+### Visual reference (sensor + score, all themes)
+
+| Level | Lit dots | Color   | Meaning              |
+|-------|---------:|---------|----------------------|
+| 1     | 5        | green   | Excellent / optimal  |
+| 2     | 4        | yellow  | Good                 |
+| 3     | 3        | orange  | Fair                 |
+| 4     | 2        | red     | Poor                 |
+| 5     | 1        | purple  | Critical             |
+
+For linear sensors (CO₂, VOCs, PM2.5) low values map to level 1
+(5 green dots) and high values to level 5 (1 purple dot). For
+symmetric sensors (temperature, humidity) the optimal centre maps to
+level 1 (5 green dots) and both extremes to level 3 (3 orange dots).
+
+---
+
 ## [0.9.2] — Align inline score column size with sensor columns
 
 ### Fixed
