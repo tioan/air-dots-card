@@ -283,14 +283,21 @@ class AirDotsCard extends LitElement {
   }
 
   _inlineScore(score, color, label, theme, t) {
-    const lvl = scoreLevel(score);
+    // Score semantics are inverted vs. sensors: HIGH score = GOOD.
+    // scoreLevel returns 1 (best) … 5 (worst), so the number of lit
+    // dots is `6 - lvl` → score 100 lights all 5 dots, score 0 lights 1.
+    // All lit dots share the current score's severity color so the bar
+    // reads like a quality / battery meter rather than a danger meter.
+    const lvl      = scoreLevel(score);
+    const litCount = 6 - lvl;
+    const dotColor = levelColor(lvl, theme);
     return html`
       <div class="score-inline-col"
            @click=${() => handleAction(this, this.hass, this._config.score_tap_action, this._config.score_entity)}>
         <div class="dots-col">
           ${[4,3,2,1,0].map(d => html`
             <div class="dot"
-                 style=${d < lvl ? `background:${levelColor(d + 1, theme)}` : ""}></div>
+                 style=${d < litCount ? `background:${dotColor}` : ""}></div>
           `)}
         </div>
         <div class="score-inline-name">${t.score_col_name}</div>

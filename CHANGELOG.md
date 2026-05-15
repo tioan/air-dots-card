@@ -20,6 +20,32 @@ Types of changes:
 
 ---
 
+## [0.9.1] — Fix inline score dot direction
+
+### Fixed
+- Inline score column dot count was inverted: score 0 lit all 5 dots and
+  score 100 lit only 1, mirroring the sensor semantics (more dots = worse).
+  For the score, higher = better, so the count is now flipped: **score 100
+  lights all 5 dots, score 0 lights 1 dot**.
+
+### Changed
+- All lit score dots now share the current score's severity color (green
+  for excellent, purple for critical) instead of the per-position graduated
+  green→purple stack used by sensor columns. The score column now reads
+  like a quality / battery meter, while sensor columns keep the existing
+  graduated "danger meter" look.
+
+  Tier mapping (unchanged):
+  | Score   | Lit dots | Color   |
+  |---------|----------|---------|
+  | 90–100  | 5        | green   |
+  | 75–89   | 4        | yellow  |
+  | 55–74   | 3        | orange  |
+  | 35–54   | 2        | red     |
+  | 0–34    | 1        | purple  |
+
+---
+
 ## [0.9.0] — Lit + ha-form refactor (HA 2026.5 baseline)
 
 > **Breaking:** Minimum Home Assistant version is now **2026.5.0**
