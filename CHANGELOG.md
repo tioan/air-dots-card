@@ -20,6 +20,19 @@ Types of changes:
 
 ---
 
+## [0.9.2] — Align inline score column size with sensor columns
+
+### Fixed
+- Inline score column was visually larger than the surrounding sensor
+  columns: `.score-inline-val` font size was 6–8 px larger than
+  `.sensor-value` across all themes (default 26 vs 18 px, mushroom 22
+  vs 15 px, bubble 20 vs 14 px). All score-column font sizes are now
+  matched 1:1 to the corresponding sensor-column rules so the score
+  column has the exact same height and visual weight as the other
+  five columns.
+
+---
+
 ## [0.9.1] — Fix inline score dot direction
 
 ### Fixed

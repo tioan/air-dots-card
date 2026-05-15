@@ -425,9 +425,9 @@ class AirDotsCard extends LitElement {
     :host([theme="default"]) .layout-left, :host([theme="default"]) .layout-right { display:flex; align-items:center; gap:20px; }
     :host([theme="default"]) .layout-left .ring-wrap, :host([theme="default"]) .layout-right .ring-wrap { flex-shrink:0; }
     :host([theme="default"]) .layout-left .sensors-row, :host([theme="default"]) .layout-right .sensors-row { flex:1; }
-    :host([theme="default"]) .score-inline-val  { font-size:26px; font-weight:500; color:var(--aq-text); line-height:1; }
-    :host([theme="default"]) .score-inline-lbl  { font-size:10px; margin-top:3px; transition:color .5s; }
-    :host([theme="default"]) .score-inline-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; }
+    :host([theme="default"]) .score-inline-val  { font-size:18px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="default"]) .score-inline-lbl  { font-size:9px; margin-top:2px; transition:color .5s; text-align:center; }
+    :host([theme="default"]) .score-inline-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; text-align:center; }
     :host([theme="default"]) .ring-track    { stroke:var(--aq-surface); stroke-width:10; }
     :host([theme="default"]) .ring-progress { stroke-width:10; }
     :host([theme="default"]) .ring-score       { font-size:44px; font-weight:500; color:var(--aq-text); line-height:1; }
@@ -470,9 +470,9 @@ class AirDotsCard extends LitElement {
     :host([theme="mushroom"]) .layout-left .ring-wrap, :host([theme="mushroom"]) .layout-right .ring-wrap { flex-shrink:0; }
     :host([theme="mushroom"]) .layout-left .sensors-row, :host([theme="mushroom"]) .layout-right .sensors-row { flex:1; }
     :host([theme="mushroom"]) .score-inline-col { border-radius:8px; padding:6px 2px; }
-    :host([theme="mushroom"]) .score-inline-val { font-size:22px; font-weight:500; color:var(--aq-text); line-height:1; }
-    :host([theme="mushroom"]) .score-inline-lbl { font-size:10px; margin-top:2px; transition:color .5s; }
-    :host([theme="mushroom"]) .score-inline-name{ font-size:10px; color:var(--aq-muted); margin-bottom:3px; }
+    :host([theme="mushroom"]) .score-inline-val { font-size:15px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="mushroom"]) .score-inline-lbl { font-size:9px;  margin-top:1px; transition:color .5s; text-align:center; }
+    :host([theme="mushroom"]) .score-inline-name{ font-size:10px; color:var(--aq-muted); margin-bottom:3px; text-align:center; }
     :host([theme="mushroom"]) .ring-track    { stroke:var(--aq-surface); stroke-width:8; }
     :host([theme="mushroom"]) .ring-progress { stroke-width:8; }
     :host([theme="mushroom"]) .ring-score       { font-size:32px; font-weight:500; color:var(--aq-text); line-height:1; }
@@ -512,9 +512,9 @@ class AirDotsCard extends LitElement {
     :host([theme="bubble"]) .layout-left .ring-wrap, :host([theme="bubble"]) .layout-right .ring-wrap { flex-shrink:0; }
     :host([theme="bubble"]) .layout-left .sensors-row, :host([theme="bubble"]) .layout-right .sensors-row { flex:1; }
     :host([theme="bubble"]) .score-inline-col { background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; }
-    :host([theme="bubble"]) .score-inline-val { font-size:20px; font-weight:600; color:var(--aq-text); line-height:1; }
-    :host([theme="bubble"]) .score-inline-lbl { font-size:9px; margin-top:2px; font-weight:500; letter-spacing:.04em; transition:color .5s; }
-    :host([theme="bubble"]) .score-inline-name{ font-size:9px; color:var(--aq-muted); margin-bottom:3px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
+    :host([theme="bubble"]) .score-inline-val { font-size:14px; font-weight:600; color:var(--aq-text); line-height:1; }
+    :host([theme="bubble"]) .score-inline-lbl { font-size:8px; margin-top:2px; font-weight:500; letter-spacing:.04em; transition:color .5s; text-align:center; }
+    :host([theme="bubble"]) .score-inline-name{ font-size:9px; color:var(--aq-muted); margin-bottom:3px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; text-align:center; }
     :host([theme="bubble"]) .ring-track    { stroke:var(--aq-surface); stroke-width:10; }
     :host([theme="bubble"]) .ring-progress { stroke-width:10; }
     :host([theme="bubble"]) .ring-score       { font-size:28px; font-weight:600; color:var(--aq-text); line-height:1; }
