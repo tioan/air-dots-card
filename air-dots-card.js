@@ -2,9 +2,11 @@
  * Air Dots Card for Home Assistant
  * Awair-inspired air quality card with dot indicators and score ring
  *
+ * Requires Home Assistant 2026.5 or newer.
+ *
  * Themes:          default | mushroom | bubble
  * Score positions: center | left | right | inline_left | inline_right
- * Languages:       en | de (auto-detected from browser, or set via `language:` config)
+ * Languages:       en | de (auto-detected from HA profile, or set via `language:` config)
  *
  * Installation:
  *   1. Copy this file to /config/www/air-dots-card.js
@@ -12,19 +14,34 @@
  *   3. Add card via UI editor or YAML
  */
 
+// ─── Lit (borrowed from HA frontend) ──────────────────────────────────────────
+
+const LitElement = Object.getPrototypeOf(
+  customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
+);
+const html = LitElement.prototype.html;
+const css  = LitElement.prototype.css;
+
+// ─── Tiny helpers ─────────────────────────────────────────────────────────────
+
+const fireEvent = (node, type, detail = {}) => {
+  const event = new Event(type, { bubbles: true, composed: true });
+  event.detail = detail;
+  node.dispatchEvent(event);
+};
+
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
 const TRANSLATIONS = {
   en: {
     score_labels:    ["Excellent", "Good", "Fair", "Poor", "Bad"],
     score_col_name:  "Score",
-    // Editor — sections
     sect_appearance: "Appearance",
     sect_general:    "General",
     sect_sensors:    "Sensors",
-    // Editor — appearance
     lbl_theme:       "Theme",
     lbl_position:    "Score position",
+    lbl_language:    "Language",
     theme_default:   "🌑 Default",
     theme_mushroom:  "🍄 Mushroom",
     theme_bubble:    "🫧 Bubble",
@@ -33,21 +50,16 @@ const TRANSLATIONS = {
     pos_right:       "Right ▶",
     pos_inline_left: "↔ Inline L",
     pos_inline_right:"Inline R ↔",
-    // Editor — general
     lbl_title:       "Card title (optional)",
-    lbl_title_ph:    "e.g. Living Room",
     lbl_score_entity:"Score entity",
     hint_score:      "Numeric sensor 0–100 (e.g. sensor.awair_score)",
-    // Editor — sensors
     lbl_entity:      "Entity",
     lbl_label:       "Label",
-    lbl_label_ph:    "e.g. CO₂",
     lbl_unit:        "Unit",
-    lbl_unit_ph:     "e.g. ppm",
     lbl_thresholds:  "Thresholds",
-    hint_thresholds:     "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
-    hint_thresholds_sym: "(🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴)",
-    lbl_level:           "Level",
+    hint_thresholds:     "🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣",
+    hint_thresholds_sym: "🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴",
+    lbl_level:           ["Level 1→2", "Level 2→3", "Level 3→4", "Level 4→5"],
     lbl_level_sym:       ["🔴→🟡 low", "🟡→🟢 low", "🟢→🟡 high", "🟡→🔴 high"],
     lbl_symmetric:       "Symmetric scale",
     hint_symmetric:      "Optimal in center range (e.g. temp, humidity)",
@@ -58,17 +70,17 @@ const TRANSLATIONS = {
     tip_up:          "Move up",
     tip_down:        "Move down",
     tip_remove:      "Remove sensor",
+    auto_lang:       "Auto",
   },
   de: {
     score_labels:    ["Ausgezeichnet", "Gut", "Mäßig", "Schlecht", "Kritisch"],
     score_col_name:  "Score",
-    // Editor — sections
     sect_appearance: "Darstellung",
     sect_general:    "Allgemein",
     sect_sensors:    "Sensoren",
-    // Editor — appearance
     lbl_theme:       "Design",
     lbl_position:    "Score-Position",
+    lbl_language:    "Sprache",
     theme_default:   "🌑 Standard",
     theme_mushroom:  "🍄 Mushroom",
     theme_bubble:    "🫧 Bubble",
@@ -77,21 +89,16 @@ const TRANSLATIONS = {
     pos_right:       "Rechts ▶",
     pos_inline_left: "↔ Inline L",
     pos_inline_right:"Inline R ↔",
-    // Editor — general
     lbl_title:       "Kartentitel (optional)",
-    lbl_title_ph:    "z. B. Wohnzimmer",
     lbl_score_entity:"Score-Entität",
     hint_score:      "Numerischer Sensor 0–100 (z. B. sensor.awair_score)",
-    // Editor — sensors
     lbl_entity:      "Entität",
     lbl_label:       "Bezeichnung",
-    lbl_label_ph:    "z. B. CO₂",
     lbl_unit:        "Einheit",
-    lbl_unit_ph:     "z. B. ppm",
     lbl_thresholds:  "Schwellenwerte",
-    hint_thresholds:     "(🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣)",
-    hint_thresholds_sym: "(🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴)",
-    lbl_level:           "Level",
+    hint_thresholds:     "🟢→🟡 / 🟡→🟠 / 🟠→🔴 / 🔴→🟣",
+    hint_thresholds_sym: "🔴→🟡 / 🟡→🟢 / 🟢→🟡 / 🟡→🔴",
+    lbl_level:           ["Level 1→2", "Level 2→3", "Level 3→4", "Level 4→5"],
     lbl_level_sym:       ["🔴→🟡 unten", "🟡→🟢 unten", "🟢→🟡 oben", "🟡→🔴 oben"],
     lbl_symmetric:       "Symmetrische Skala",
     hint_symmetric:      "Optimal im Mittelbereich (z. B. Temp, Luftfeuchtigkeit)",
@@ -102,21 +109,14 @@ const TRANSLATIONS = {
     tip_up:          "Nach oben",
     tip_down:        "Nach unten",
     tip_remove:      "Sensor entfernen",
+    auto_lang:       "Auto",
   },
 };
 
-/**
- * Resolve translation strings for a given language config value.
- * Falls back to English if the language is not supported.
- * When set to "auto", reads the language from the Home Assistant user profile
- * (hass.locale.language) rather than the browser locale.
- * The hass object must be passed in so the card and editor can share this logic.
- */
 function getT(langConfig, hass) {
   const raw = langConfig || "auto";
   let lang;
   if (raw === "auto") {
-    // Prefer the HA profile language; fall back to browser locale as last resort
     const haLang = hass?.locale?.language || hass?.language || "";
     lang = haLang.toLowerCase().startsWith("de") ? "de" : "en";
   } else {
@@ -135,16 +135,19 @@ const AWAIR_DEFAULTS = [
   { label: "PM2.5",     unit: "\u00b5g/m\u00b3", thresholds: [12, 35, 55, 150]                        },
 ];
 
-// ─── Shared helpers ────────────────────────────────────────────────────────────
+// ─── Color logic ──────────────────────────────────────────────────────────────
+
+const THEME_COLORS = {
+  default:  ["#6abf69","#f4c842","#f4923a","#e05252","#9b6ddf"],
+  mushroom: ["#43a047","#f9a825","#ef6c00","#e53935","#8e24aa"],
+  bubble:   ["#4caf50","#ffeb3b","#ff9800","#f44336","#9c27b0"],
+};
 
 /**
  * Map a numeric sensor value to severity level 1–5.
- * Linear mode (default): higher value = worse (CO₂, VOCs, PM2.5).
- * Symmetric mode: optimal range is in the center; both extremes are bad (temp, humidity).
+ * Linear (default): higher = worse.
+ * Symmetric: optimal range in the center, both extremes are bad.
  *   thresholds = [low_bad, low_ok, high_ok, high_bad]
- *   level 1 (green):  low_ok  ≤ value ≤ high_ok
- *   level 2 (yellow): low_bad ≤ value <  low_ok  or  high_ok < value ≤ high_bad
- *   level 3 (orange): value < low_bad or value > high_bad
  */
 function getLevel(value, thresholds, symmetric = false) {
   if (symmetric && thresholds.length >= 4) {
@@ -157,366 +160,90 @@ function getLevel(value, thresholds, symmetric = false) {
   return Math.min(level, 5);
 }
 
-/** Return the dot/ring color for a given severity level and theme. */
-function levelColor(level, theme) {
-  const colors = {
-    default:  ["#6abf69","#f4c842","#f4923a","#e05252","#9b6ddf"],
-    mushroom: ["#43a047","#f9a825","#ef6c00","#e53935","#8e24aa"],
-    bubble:   ["#4caf50","#ffeb3b","#ff9800","#f44336","#9c27b0"],
-  };
-  return (colors[theme] || colors.default)[level - 1];
-}
+const levelColor = (level, theme) =>
+  (THEME_COLORS[theme] || THEME_COLORS.default)[level - 1];
 
-/** Return the translated score label for a given score value. */
-function scoreLabel(score, t) {
-  const labels = t.score_labels;
-  if (score >= 90) return labels[0];
-  if (score >= 75) return labels[1];
-  if (score >= 55) return labels[2];
-  if (score >= 35) return labels[3];
-  return labels[4];
-}
+const scoreLevel = score =>
+  score >= 90 ? 1 : score >= 75 ? 2 : score >= 55 ? 3 : score >= 35 ? 4 : 5;
 
-/** Return the ring/label color for a given score value. */
-function scoreLabelColor(score, theme) {
-  const level = score >= 75 ? 1 : score >= 55 ? 2 : score >= 35 ? 3 : 4;
-  return levelColor(level, theme);
-}
+const scoreLabel = (score, t) => t.score_labels[scoreLevel(score) - 1];
 
-// ─── Theme CSS blocks ──────────────────────────────────────────────────────────
-
-const THEME_CSS = {
-
-  default: `
-    :host {
-      --aq-bg:      #1c1f23; --aq-surface: #252930;
-      --aq-inactive:#3a3f47; --aq-divider: #333840;
-      --aq-text:    #e8eaed; --aq-muted:   #8b9199;
-      display: block;
-    }
-    ha-card { background:var(--aq-bg) !important; border-radius:18px !important; padding:24px 20px 22px; box-shadow:none !important; }
-    .card-title { font-size:13px; font-weight:500; color:var(--aq-muted); text-align:center; margin-bottom:18px; letter-spacing:.06em; text-transform:uppercase; }
-    .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:28px; }
-    .layout-center .ring-container { position:relative; width:140px; height:140px; }
-    .layout-left, .layout-right { display:flex; align-items:center; gap:20px; }
-    .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
-    .layout-left .ring-container, .layout-right .ring-container { position:relative; width:110px; height:110px; }
-    .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; }
-    .score-inline-val { font-size:26px; font-weight:500; color:var(--aq-text); line-height:1; }
-    .score-inline-lbl { font-size:10px; margin-top:3px; }
-    .score-inline-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; }
-    .ring-svg { width:100%; height:100%; transform:rotate(-90deg); }
-    .ring-track { fill:none; stroke:var(--aq-surface); stroke-width:10; }
-    .ring-progress { fill:none; stroke-width:10; stroke-linecap:round; stroke-dasharray:376.99; stroke-dashoffset:377; transition:stroke-dashoffset .8s ease,stroke .5s ease; }
-    .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .ring-score { font-size:44px; font-weight:500; color:var(--aq-text); line-height:1; }
-    .ring-score.small { font-size:32px; }
-    .ring-label { font-size:13px; margin-top:4px; transition:color .5s; }
-    .ring-label.small { font-size:11px; }
-    .sensors-row { display:flex; justify-content:space-between; align-items:flex-end; gap:4px; }
-    .sensor-col { display:flex; flex-direction:column; align-items:center; flex:1; cursor:pointer; }
-    .sensor-col:hover .sensor-value { opacity:.75; }
-    .dots-col { display:flex; flex-direction:column; align-items:center; gap:7px; margin-bottom:10px; }
-    .dot { width:10px; height:10px; border-radius:50%; background:var(--aq-inactive); transition:background .4s; }
-    .sensor-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; text-align:center; }
-    .sensor-value { font-size:18px; font-weight:500; color:var(--aq-text); line-height:1; transition:opacity .3s; }
-    .sensor-unit { font-size:9px; color:var(--aq-muted); margin-top:2px; text-align:center; }
-    .col-divider { width:.5px; height:60px; background:var(--aq-divider); align-self:center; margin-bottom:52px; flex-shrink:0; }
-    .layout-inline .col-divider { height:40px; margin-bottom:36px; }
-  `,
-
-  mushroom: `
-    :host {
-      --aq-bg:      var(--ha-card-background, var(--card-background-color,#fff));
-      --aq-surface: rgba(var(--rgb-primary-color,33,150,243),.08);
-      --aq-inactive:rgba(var(--rgb-primary-text-color,0,0,0),.12);
-      --aq-divider: rgba(var(--rgb-primary-text-color,0,0,0),.08);
-      --aq-text:    var(--primary-text-color,#212121);
-      --aq-muted:   var(--secondary-text-color,#727272);
-      display: block;
-    }
-    ha-card { background:var(--aq-bg) !important; border-radius:var(--ha-card-border-radius,12px) !important; padding:16px; box-shadow:var(--ha-card-box-shadow,none) !important; border:1px solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12))) !important; }
-    .card-title { font-size:12px; font-weight:500; color:var(--aq-muted); margin-bottom:12px; letter-spacing:.04em; text-transform:uppercase; }
-    .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:16px; }
-    .layout-center .ring-container { position:relative; width:110px; height:110px; }
-    .layout-left, .layout-right { display:flex; align-items:center; gap:16px; }
-    .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
-    .layout-left .ring-container, .layout-right .ring-container { position:relative; width:90px; height:90px; }
-    .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; border-radius:8px; padding:6px 2px; }
-    .score-inline-val { font-size:22px; font-weight:500; color:var(--aq-text); line-height:1; }
-    .score-inline-lbl { font-size:10px; margin-top:2px; }
-    .score-inline-name { font-size:10px; color:var(--aq-muted); margin-bottom:3px; }
-    .ring-svg { width:100%; height:100%; transform:rotate(-90deg); }
-    .ring-track { fill:none; stroke:var(--aq-surface); stroke-width:8; }
-    .ring-progress { fill:none; stroke-width:8; stroke-linecap:round; stroke-dasharray:376.99; stroke-dashoffset:377; transition:stroke-dashoffset .8s ease,stroke .5s ease; }
-    .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .ring-score { font-size:32px; font-weight:500; color:var(--aq-text); line-height:1; }
-    .ring-score.small { font-size:24px; }
-    .ring-label { font-size:11px; margin-top:3px; transition:color .5s; }
-    .ring-label.small { font-size:10px; }
-    .sensors-row { display:flex; justify-content:space-between; align-items:flex-end; gap:4px; }
-    .sensor-col { display:flex; flex-direction:column; align-items:center; flex:1; cursor:pointer; border-radius:8px; padding:6px 2px; transition:background .15s; }
-    .sensor-col:hover { background:var(--aq-surface); }
-    .dots-col { display:flex; flex-direction:column; align-items:center; gap:5px; margin-bottom:8px; }
-    .dot { width:8px; height:8px; border-radius:50%; background:var(--aq-inactive); transition:background .4s; }
-    .sensor-name { font-size:10px; color:var(--aq-muted); margin-bottom:3px; text-align:center; }
-    .sensor-value { font-size:15px; font-weight:500; color:var(--aq-text); line-height:1; }
-    .sensor-unit { font-size:9px; color:var(--aq-muted); margin-top:1px; text-align:center; }
-    .col-divider { width:.5px; height:48px; background:var(--aq-divider); align-self:center; margin-bottom:40px; flex-shrink:0; }
-    .layout-inline .col-divider { height:34px; margin-bottom:28px; }
-  `,
-
-  bubble: `
-    :host {
-      --aq-bg:      var(--ha-card-background, var(--card-background-color,#fff));
-      --aq-surface: rgba(var(--rgb-primary-color,99,102,241),.10);
-      --aq-inactive:rgba(var(--rgb-primary-text-color,0,0,0),.10);
-      --aq-divider: transparent;
-      --aq-text:    var(--primary-text-color,#111);
-      --aq-muted:   var(--secondary-text-color,#888);
-      display: block;
-    }
-    ha-card { background:var(--aq-bg) !important; border-radius:32px !important; padding:20px 18px 18px; box-shadow:none !important; border:none !important; }
-    .card-title { font-size:11px; font-weight:600; color:var(--aq-muted); text-align:center; margin-bottom:14px; letter-spacing:.08em; text-transform:uppercase; }
-    .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:16px; }
-    .layout-center .ring-container { position:relative; width:100px; height:100px; }
-    .layout-left, .layout-right { display:flex; align-items:center; gap:14px; }
-    .layout-left .ring-wrap, .layout-right .ring-wrap { flex-shrink:0; }
-    .layout-left .ring-container, .layout-right .ring-container { position:relative; width:84px; height:84px; }
-    .layout-left .sensors-row, .layout-right .sensors-row { flex:1; }
-    .layout-inline .score-inline-col { display:flex; flex-direction:column; align-items:center; flex:1; background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; }
-    .score-inline-val { font-size:20px; font-weight:600; color:var(--aq-text); line-height:1; }
-    .score-inline-lbl { font-size:9px; margin-top:2px; font-weight:500; letter-spacing:.04em; }
-    .score-inline-name { font-size:9px; color:var(--aq-muted); margin-bottom:3px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
-    .ring-svg { width:100%; height:100%; transform:rotate(-90deg); }
-    .ring-track { fill:none; stroke:var(--aq-surface); stroke-width:10; }
-    .ring-progress { fill:none; stroke-width:10; stroke-linecap:round; stroke-dasharray:376.99; stroke-dashoffset:377; transition:stroke-dashoffset .8s ease,stroke .5s ease; }
-    .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .ring-score { font-size:28px; font-weight:600; color:var(--aq-text); line-height:1; }
-    .ring-score.small { font-size:22px; }
-    .ring-label { font-size:10px; margin-top:2px; transition:color .5s; font-weight:500; letter-spacing:.04em; }
-    .ring-label.small { font-size:9px; }
-    .sensors-row { display:flex; justify-content:space-between; align-items:flex-end; gap:6px; }
-    .sensor-col { display:flex; flex-direction:column; align-items:center; flex:1; cursor:pointer; background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; transition:opacity .15s; }
-    .sensor-col:hover { opacity:.8; }
-    .dots-col { display:flex; flex-direction:column; align-items:center; gap:5px; margin-bottom:6px; }
-    .dot { width:7px; height:7px; border-radius:50%; background:var(--aq-inactive); transition:background .4s; }
-    .sensor-name { font-size:9px; color:var(--aq-muted); margin-bottom:3px; text-align:center; font-weight:500; letter-spacing:.03em; text-transform:uppercase; }
-    .sensor-value { font-size:14px; font-weight:600; color:var(--aq-text); line-height:1; }
-    .sensor-unit { font-size:8px; color:var(--aq-muted); margin-top:2px; text-align:center; }
-    .col-divider { display:none; }
-  `,
+const scoreLabelColor = (score, theme) => {
+  // Label color uses 1–4 mapping (75/55/35) for backward visual parity.
+  const lvl = score >= 75 ? 1 : score >= 55 ? 2 : score >= 35 ? 3 : 4;
+  return levelColor(lvl, theme);
 };
+
+// ─── Action handler (tap_action) ──────────────────────────────────────────────
+
+function handleAction(node, hass, actionConfig, entityId) {
+  const cfg = actionConfig || { action: "more-info" };
+  switch (cfg.action) {
+    case "none": return;
+    case "more-info":
+      if (entityId) fireEvent(node, "hass-more-info", { entityId });
+      return;
+    case "navigate":
+      if (cfg.navigation_path) {
+        history.pushState(null, "", cfg.navigation_path);
+        fireEvent(window, "location-changed", { replace: false });
+      }
+      return;
+    case "url":
+      if (cfg.url_path) window.open(cfg.url_path);
+      return;
+    case "perform-action":
+    case "call-service": {
+      const target = cfg.perform_action || cfg.service;
+      if (!target || !hass) return;
+      const [domain, service] = target.split(".");
+      hass.callService(domain, service, cfg.data || cfg.service_data || {}, cfg.target);
+      return;
+    }
+  }
+}
+
+// ─── Value formatting ─────────────────────────────────────────────────────────
+
+function formatValue(hass, stateObj) {
+  if (!stateObj) return "--";
+  const raw = parseFloat(stateObj.state);
+  if (!Number.isFinite(raw)) return "--";
+  const lang = hass?.locale?.language || "en";
+  const fmt = new Intl.NumberFormat(lang, {
+    maximumFractionDigits: Number.isInteger(raw) ? 0 : 1,
+  });
+  return fmt.format(raw);
+}
 
 // ─── CARD ──────────────────────────────────────────────────────────────────────
 
-class AirDotsCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+class AirDotsCard extends LitElement {
+  static properties = {
+    hass:     { attribute: false },
+    _config:  { state: true },
+  };
 
   setConfig(config) {
-    if (!config.sensors || config.sensors.length === 0)
+    if (!config?.sensors?.length)
       throw new Error("Please define at least one sensor.");
     this._config = config;
-    this.render();
-  }
-
-  set hass(hass) {
-    this._hass = hass;
-    this.updateValues();
+    this.setAttribute("theme",    config.theme          || "default");
+    this.setAttribute("position", config.score_position || "center");
   }
 
   getCardSize() { return 4; }
 
-  _theme()    { return this._config.theme          || "default"; }
-  _position() { return this._config.score_position || "center"; }
-  _t()        { return getT(this._config.language, this._hass); }
-
-  /** Build the score ring SVG + inner number/label. */
-  _ringHTML(small = false) {
-    const sz = small ? "small" : "";
-    return `
-      <div class="ring-container">
-        <svg class="ring-svg" viewBox="0 0 140 140">
-          <circle class="ring-track"    cx="70" cy="70" r="60"/>
-          <circle class="ring-progress" cx="70" cy="70" r="60" id="ring"/>
-        </svg>
-        <div class="ring-inner">
-          <span class="ring-score ${sz}" id="score-val">--</span>
-          <span class="ring-label ${sz}" id="score-lbl">--</span>
-        </div>
-      </div>`;
-  }
-
-  /** Build the inline score column (no ring, just dots + number). */
-  _inlineScoreHTML() {
-    const t = this._t();
-    return `
-      <div class="score-inline-col" id="score-inline-col">
-        <div class="dots-col">
-          ${[4,3,2,1,0].map(d => `<div class="dot" data-scorepos="${d}"></div>`).join("")}
-        </div>
-        <div class="score-inline-name">${t.score_col_name}</div>
-        <div class="score-inline-val" id="score-val">--</div>
-        <div class="score-inline-lbl" id="score-lbl">--</div>
-      </div>`;
-  }
-
-  render() {
-    const theme    = this._theme();
-    const position = this._position();
-    const title    = this._config.title || "";
-    const isInline = position === "inline_left" || position === "inline_right";
-
-    let inner = "";
-    if (position === "center") {
-      inner = `<div class="layout-center"><div class="ring-wrap">${this._ringHTML(false)}</div><div class="sensors-row" id="sensors-row"></div></div>`;
-    } else if (position === "left") {
-      inner = `<div class="layout-left"><div class="ring-wrap">${this._ringHTML(true)}</div><div class="sensors-row" id="sensors-row"></div></div>`;
-    } else if (position === "right") {
-      inner = `<div class="layout-right"><div class="sensors-row" id="sensors-row"></div><div class="ring-wrap">${this._ringHTML(true)}</div></div>`;
-    } else {
-      // inline_left and inline_right both start with the score col; sensors are inserted around it in _buildSensorColumns
-      inner = `<div class="layout-inline"><div class="sensors-row" id="sensors-row">${this._inlineScoreHTML()}</div></div>`;
-    }
-
-    this.shadowRoot.innerHTML = `
-      <style>${THEME_CSS[theme] || THEME_CSS.default}</style>
-      <ha-card>
-        ${title ? `<div class="card-title">${title}</div>` : ""}
-        ${inner}
-      </ha-card>`;
-
-    this._buildSensorColumns();
-
-    if (isInline) {
-      const scoreCol = this.shadowRoot.getElementById("score-inline-col");
-      if (scoreCol) {
-        scoreCol.style.cursor = "pointer";
-        scoreCol.addEventListener("click", () => {
-          const entity = this._config.score_entity;
-          if (this._hass && entity)
-            this.dispatchEvent(new CustomEvent("hass-more-info", {
-              bubbles: true, composed: true, detail: { entityId: entity },
-            }));
-        });
-      }
-    }
-  }
-
-  _buildSensorColumns() {
-    const row      = this.shadowRoot.getElementById("sensors-row");
-    if (!row) return;
-    const position = this._position();
-    const isInline = position === "inline_left" || position === "inline_right";
-
-    if (isInline) {
-      // Remove previously added sensor cols; keep the score-inline-col
-      row.querySelectorAll(".sensor-col, .col-divider").forEach(el => el.remove());
-    } else {
-      row.innerHTML = "";
-    }
-
-    const makeDivider = () => { const d = document.createElement("div"); d.className = "col-divider"; return d; };
-
-    const makeCol = (s, i) => {
-      const dotsDiv = document.createElement("div");
-      dotsDiv.className = "dots-col";
-      for (let d = 4; d >= 0; d--) {
-        const dot = document.createElement("div");
-        dot.className = "dot";
-        dot.dataset.sensor = i;
-        dot.dataset.pos    = d;
-        dotsDiv.appendChild(dot);
-      }
-      const col = document.createElement("div");
-      col.className = "sensor-col";
-      col.innerHTML = `
-        <div class="sensor-name">${s.label || s.entity}</div>
-        <div class="sensor-value" id="val-${i}">--</div>
-        <div class="sensor-unit">${s.unit || ""}</div>`;
-      col.insertBefore(dotsDiv, col.firstChild);
-      col.addEventListener("click", () => {
-        if (this._hass && s.entity)
-          this.dispatchEvent(new CustomEvent("hass-more-info", {
-            bubbles: true, composed: true, detail: { entityId: s.entity },
-          }));
-      });
-      return col;
+  // Sections-view sizing (HA 2024.10+).
+  getGridOptions() {
+    const sensors = this._config?.sensors?.length || 5;
+    const isInline = ["inline_left", "inline_right"].includes(this._config?.score_position);
+    return {
+      columns: 12,
+      rows:    isInline ? 3 : 4,
+      min_columns: Math.max(6, sensors + 1),
+      min_rows: 2,
     };
-
-    if (position === "inline_left") {
-      // Score col is already first — append sensors after it
-      this._config.sensors.forEach((s, i) => {
-        row.appendChild(makeDivider());
-        row.appendChild(makeCol(s, i));
-      });
-    } else if (position === "inline_right") {
-      // Prepend sensors before the score col
-      const scoreCol = row.querySelector("#score-inline-col");
-      this._config.sensors.forEach((s, i) => {
-        row.insertBefore(makeCol(s, i), scoreCol);
-        row.insertBefore(makeDivider(), scoreCol);
-      });
-    } else {
-      // center / left / right — sensors with dividers between them
-      this._config.sensors.forEach((s, i) => {
-        if (i > 0) row.appendChild(makeDivider());
-        row.appendChild(makeCol(s, i));
-      });
-    }
-  }
-
-  updateValues() {
-    if (!this._hass || !this._config) return;
-    const theme    = this._theme();
-    const position = this._position();
-    const t        = this._t();
-    const isInline = position === "inline_left" || position === "inline_right";
-
-    // Update each sensor column
-    this._config.sensors.forEach((s, i) => {
-      const raw   = s.entity && this._hass.states[s.entity] ? parseFloat(this._hass.states[s.entity].state) : null;
-      const valEl = this.shadowRoot.getElementById(`val-${i}`);
-      if (valEl) valEl.textContent = raw !== null ? (Number.isInteger(raw) ? raw : raw.toFixed(1)) : "--";
-      const level = raw !== null ? getLevel(raw, s.thresholds || [], !!s.symmetric) : 0;
-      this.shadowRoot.querySelectorAll(`.dot[data-sensor="${i}"]`).forEach(dot => {
-        const pos = parseInt(dot.dataset.pos);
-        dot.style.background = pos < level ? levelColor(pos + 1, theme) : "";
-      });
-    });
-
-    // Resolve score from entity
-    const scoreEntity = this._config.score_entity;
-    let score = 0;
-    if (scoreEntity && this._hass.states[scoreEntity])
-      score = Math.round(parseFloat(this._hass.states[scoreEntity].state)) || 0;
-
-    const color  = scoreLabelColor(score, theme);
-    const label  = scoreLabel(score, t);
-    const offset = 376.99 - (score / 100) * 376.99;
-
-    const scoreEl = this.shadowRoot.getElementById("score-val");
-    const lblEl   = this.shadowRoot.getElementById("score-lbl");
-    if (scoreEl) scoreEl.textContent = score;
-    if (lblEl)   { lblEl.textContent = label; lblEl.style.color = color; }
-
-    if (!isInline) {
-      // Animate ring
-      const ringEl = this.shadowRoot.getElementById("ring");
-      if (ringEl) { ringEl.style.strokeDashoffset = offset; ringEl.style.stroke = color; }
-    } else {
-      // Color inline score dots — 5 levels matching scoreLabel thresholds
-      const level = score >= 90 ? 1 : score >= 75 ? 2 : score >= 55 ? 3 : score >= 35 ? 4 : 5;
-      this.shadowRoot.querySelectorAll(".dot[data-scorepos]").forEach(dot => {
-        const pos = parseInt(dot.dataset.scorepos);
-        dot.style.background = pos < level ? levelColor(pos + 1, theme) : "";
-      });
-    }
   }
 
   static getConfigElement() { return document.createElement("air-dots-card-editor"); }
@@ -531,258 +258,562 @@ class AirDotsCard extends HTMLElement {
       sensors: AWAIR_DEFAULTS.map(d => ({ entity: "", ...d, thresholds: [...d.thresholds] })),
     };
   }
+
+  // ── Render helpers ──
+
+  _ringSvg(score, color) {
+    return html`
+      <svg class="ring-svg" viewBox="0 0 140 140">
+        <circle class="ring-track"    cx="70" cy="70" r="60" />
+        <circle class="ring-progress" cx="70" cy="70" r="60"
+                pathLength="100"
+                style=${`stroke-dashoffset:${100 - score};stroke:${color}`} />
+      </svg>`;
+  }
+
+  _ringBlock(score, color, label, small) {
+    return html`
+      <div class="ring-container ${small ? "small" : ""}">
+        ${this._ringSvg(score, color)}
+        <div class="ring-inner">
+          <span class="ring-score ${small ? "small" : ""}">${score}</span>
+          <span class="ring-label ${small ? "small" : ""}" style=${`color:${color}`}>${label}</span>
+        </div>
+      </div>`;
+  }
+
+  _inlineScore(score, color, label, theme, t) {
+    const lvl = scoreLevel(score);
+    return html`
+      <div class="score-inline-col"
+           @click=${() => handleAction(this, this.hass, this._config.score_tap_action, this._config.score_entity)}>
+        <div class="dots-col">
+          ${[4,3,2,1,0].map(d => html`
+            <div class="dot"
+                 style=${d < lvl ? `background:${levelColor(d + 1, theme)}` : ""}></div>
+          `)}
+        </div>
+        <div class="score-inline-name">${t.score_col_name}</div>
+        <div class="score-inline-val">${score}</div>
+        <div class="score-inline-lbl" style=${`color:${color}`}>${label}</div>
+      </div>`;
+  }
+
+  _sensorCol(s, idx, theme) {
+    const stateObj = s.entity ? this.hass?.states?.[s.entity] : null;
+    const raw      = stateObj ? parseFloat(stateObj.state) : NaN;
+    const level    = Number.isFinite(raw) ? getLevel(raw, s.thresholds || [], !!s.symmetric) : 0;
+    const value    = formatValue(this.hass, stateObj);
+    const label    = s.label || stateObj?.attributes?.friendly_name || s.entity || "Sensor";
+    const unit     = s.unit ?? stateObj?.attributes?.unit_of_measurement ?? "";
+
+    return html`
+      <div class="sensor-col"
+           @click=${() => handleAction(this, this.hass, s.tap_action, s.entity)}>
+        <div class="dots-col">
+          ${[4,3,2,1,0].map(d => html`
+            <div class="dot"
+                 style=${d < level ? `background:${levelColor(d + 1, theme)}` : ""}></div>
+          `)}
+        </div>
+        <div class="sensor-name">${label}</div>
+        <div class="sensor-value">${value}</div>
+        <div class="sensor-unit">${unit}</div>
+      </div>`;
+  }
+
+  render() {
+    if (!this._config || !this.hass) return html``;
+    const c        = this._config;
+    const theme    = c.theme || "default";
+    const position = c.score_position || "center";
+    const t        = getT(c.language, this.hass);
+    const isInline = position === "inline_left" || position === "inline_right";
+
+    const scoreState = c.score_entity ? this.hass.states[c.score_entity] : null;
+    const score = scoreState ? Math.round(parseFloat(scoreState.state)) || 0 : 0;
+    const color = scoreLabelColor(score, theme);
+    const label = scoreLabel(score, t);
+
+    const sensorCols = c.sensors.map((s, i) => this._sensorCol(s, i, theme));
+    const dividers   = (cols) => cols.flatMap((c, i) =>
+      i === 0 ? [c] : [html`<div class="col-divider"></div>`, c]
+    );
+
+    let body;
+    if (position === "center") {
+      body = html`
+        <div class="layout-center">
+          <div class="ring-wrap">${this._ringBlock(score, color, label, false)}</div>
+          <div class="sensors-row">${dividers(sensorCols)}</div>
+        </div>`;
+    } else if (position === "left") {
+      body = html`
+        <div class="layout-left">
+          <div class="ring-wrap">${this._ringBlock(score, color, label, true)}</div>
+          <div class="sensors-row">${dividers(sensorCols)}</div>
+        </div>`;
+    } else if (position === "right") {
+      body = html`
+        <div class="layout-right">
+          <div class="sensors-row">${dividers(sensorCols)}</div>
+          <div class="ring-wrap">${this._ringBlock(score, color, label, true)}</div>
+        </div>`;
+    } else {
+      // inline_left / inline_right
+      const score$ = this._inlineScore(score, color, label, theme, t);
+      const items  = position === "inline_left"
+        ? [score$, ...sensorCols]
+        : [...sensorCols, score$];
+      body = html`
+        <div class="layout-inline">
+          <div class="sensors-row">${dividers(items)}</div>
+        </div>`;
+    }
+
+    return html`
+      <ha-card>
+        ${c.title ? html`<div class="card-title">${c.title}</div>` : ""}
+        ${body}
+      </ha-card>`;
+  }
+
+  static styles = css`
+    :host { display: block; color-scheme: light dark; }
+
+    /* ─── Common structure ─────────────────────────────────────────────── */
+    .ring-svg     { width:100%; height:100%; transform:rotate(-90deg); }
+    .ring-track   { fill:none; }
+    .ring-progress{ fill:none; stroke-linecap:round;
+                    stroke-dasharray:100; stroke-dashoffset:100;
+                    transition:stroke-dashoffset .8s ease, stroke .5s ease; }
+    .ring-inner   { position:absolute; inset:0; display:flex; flex-direction:column;
+                    align-items:center; justify-content:center; }
+    .ring-label   { transition:color .5s; }
+    .sensors-row  { display:flex; justify-content:space-between; align-items:flex-end; gap:4px; }
+    .sensor-col, .score-inline-col {
+      display:flex; flex-direction:column; align-items:center; flex:1; cursor:pointer;
+    }
+    .dots-col     { display:flex; flex-direction:column; align-items:center; }
+    .dot          { border-radius:50%; transition:background .4s; }
+    .col-divider  { align-self:center; flex-shrink:0; }
+
+    /* ─── DEFAULT theme ────────────────────────────────────────────────── */
+    :host([theme="default"]) {
+      --aq-bg:      #1c1f23; --aq-surface: #252930;
+      --aq-inactive:#3a3f47; --aq-divider: #333840;
+      --aq-text:    #e8eaed; --aq-muted:   #8b9199;
+    }
+    :host([theme="default"]) ha-card {
+      background:var(--aq-bg) !important; border-radius:18px !important;
+      padding:24px 20px 22px; box-shadow:none !important;
+    }
+    :host([theme="default"]) .card-title {
+      font-size:13px; font-weight:500; color:var(--aq-muted); text-align:center;
+      margin-bottom:18px; letter-spacing:.06em; text-transform:uppercase;
+    }
+    :host([theme="default"]) .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:28px; }
+    :host([theme="default"]) .ring-container        { position:relative; width:140px; height:140px; }
+    :host([theme="default"]) .ring-container.small  { width:110px; height:110px; }
+    :host([theme="default"]) .layout-left, :host([theme="default"]) .layout-right { display:flex; align-items:center; gap:20px; }
+    :host([theme="default"]) .layout-left .ring-wrap, :host([theme="default"]) .layout-right .ring-wrap { flex-shrink:0; }
+    :host([theme="default"]) .layout-left .sensors-row, :host([theme="default"]) .layout-right .sensors-row { flex:1; }
+    :host([theme="default"]) .score-inline-val  { font-size:26px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="default"]) .score-inline-lbl  { font-size:10px; margin-top:3px; transition:color .5s; }
+    :host([theme="default"]) .score-inline-name { font-size:11px; color:var(--aq-muted); margin-bottom:4px; }
+    :host([theme="default"]) .ring-track    { stroke:var(--aq-surface); stroke-width:10; }
+    :host([theme="default"]) .ring-progress { stroke-width:10; }
+    :host([theme="default"]) .ring-score       { font-size:44px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="default"]) .ring-score.small { font-size:32px; }
+    :host([theme="default"]) .ring-label       { font-size:13px; margin-top:4px; }
+    :host([theme="default"]) .ring-label.small { font-size:11px; }
+    :host([theme="default"]) .sensor-col:hover .sensor-value { opacity:.75; }
+    :host([theme="default"]) .dots-col     { gap:7px; margin-bottom:10px; }
+    :host([theme="default"]) .dot          { width:10px; height:10px; background:var(--aq-inactive); }
+    :host([theme="default"]) .sensor-name  { font-size:11px; color:var(--aq-muted); margin-bottom:4px; text-align:center; }
+    :host([theme="default"]) .sensor-value { font-size:18px; font-weight:500; color:var(--aq-text); line-height:1; transition:opacity .3s; }
+    :host([theme="default"]) .sensor-unit  { font-size:9px; color:var(--aq-muted); margin-top:2px; text-align:center; }
+    :host([theme="default"]) .col-divider  { width:.5px; height:60px; background:var(--aq-divider); margin-bottom:52px; }
+    :host([theme="default"]) .layout-inline .col-divider { height:40px; margin-bottom:36px; }
+
+    /* ─── MUSHROOM theme ──────────────────────────────────────────────── */
+    :host([theme="mushroom"]) {
+      --aq-bg:      var(--ha-card-background, var(--card-background-color,#fff));
+      --aq-surface: light-dark(rgba(0,0,0,.05), rgba(255,255,255,.07));
+      --aq-inactive:light-dark(rgba(0,0,0,.12), rgba(255,255,255,.14));
+      --aq-divider: light-dark(rgba(0,0,0,.08), rgba(255,255,255,.10));
+      --aq-text:    var(--primary-text-color,#212121);
+      --aq-muted:   var(--secondary-text-color,#727272);
+    }
+    :host([theme="mushroom"]) ha-card {
+      background:var(--aq-bg) !important;
+      border-radius:var(--ha-card-border-radius,12px) !important;
+      padding:16px;
+      box-shadow:var(--ha-card-box-shadow,none) !important;
+      border:1px solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12))) !important;
+    }
+    :host([theme="mushroom"]) .card-title {
+      font-size:12px; font-weight:500; color:var(--aq-muted); margin-bottom:12px;
+      letter-spacing:.04em; text-transform:uppercase;
+    }
+    :host([theme="mushroom"]) .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:16px; }
+    :host([theme="mushroom"]) .ring-container       { position:relative; width:110px; height:110px; }
+    :host([theme="mushroom"]) .ring-container.small { width:90px; height:90px; }
+    :host([theme="mushroom"]) .layout-left, :host([theme="mushroom"]) .layout-right { display:flex; align-items:center; gap:16px; }
+    :host([theme="mushroom"]) .layout-left .ring-wrap, :host([theme="mushroom"]) .layout-right .ring-wrap { flex-shrink:0; }
+    :host([theme="mushroom"]) .layout-left .sensors-row, :host([theme="mushroom"]) .layout-right .sensors-row { flex:1; }
+    :host([theme="mushroom"]) .score-inline-col { border-radius:8px; padding:6px 2px; }
+    :host([theme="mushroom"]) .score-inline-val { font-size:22px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="mushroom"]) .score-inline-lbl { font-size:10px; margin-top:2px; transition:color .5s; }
+    :host([theme="mushroom"]) .score-inline-name{ font-size:10px; color:var(--aq-muted); margin-bottom:3px; }
+    :host([theme="mushroom"]) .ring-track    { stroke:var(--aq-surface); stroke-width:8; }
+    :host([theme="mushroom"]) .ring-progress { stroke-width:8; }
+    :host([theme="mushroom"]) .ring-score       { font-size:32px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="mushroom"]) .ring-score.small { font-size:24px; }
+    :host([theme="mushroom"]) .ring-label       { font-size:11px; margin-top:3px; }
+    :host([theme="mushroom"]) .ring-label.small { font-size:10px; }
+    :host([theme="mushroom"]) .sensor-col { border-radius:8px; padding:6px 2px; transition:background .15s; }
+    :host([theme="mushroom"]) .sensor-col:hover { background:var(--aq-surface); }
+    :host([theme="mushroom"]) .dots-col { gap:5px; margin-bottom:8px; }
+    :host([theme="mushroom"]) .dot      { width:8px; height:8px; background:var(--aq-inactive); }
+    :host([theme="mushroom"]) .sensor-name  { font-size:10px; color:var(--aq-muted); margin-bottom:3px; text-align:center; }
+    :host([theme="mushroom"]) .sensor-value { font-size:15px; font-weight:500; color:var(--aq-text); line-height:1; }
+    :host([theme="mushroom"]) .sensor-unit  { font-size:9px; color:var(--aq-muted); margin-top:1px; text-align:center; }
+    :host([theme="mushroom"]) .col-divider  { width:.5px; height:48px; background:var(--aq-divider); margin-bottom:40px; }
+    :host([theme="mushroom"]) .layout-inline .col-divider { height:34px; margin-bottom:28px; }
+
+    /* ─── BUBBLE theme ────────────────────────────────────────────────── */
+    :host([theme="bubble"]) {
+      --aq-bg:      var(--ha-card-background, var(--card-background-color,#fff));
+      --aq-surface: light-dark(rgba(0,0,0,.05), rgba(255,255,255,.07));
+      --aq-inactive:light-dark(rgba(0,0,0,.10), rgba(255,255,255,.12));
+      --aq-text:    var(--primary-text-color,#111);
+      --aq-muted:   var(--secondary-text-color,#888);
+    }
+    :host([theme="bubble"]) ha-card {
+      background:var(--aq-bg) !important; border-radius:32px !important;
+      padding:20px 18px 18px; box-shadow:none !important; border:none !important;
+    }
+    :host([theme="bubble"]) .card-title {
+      font-size:11px; font-weight:600; color:var(--aq-muted); text-align:center;
+      margin-bottom:14px; letter-spacing:.08em; text-transform:uppercase;
+    }
+    :host([theme="bubble"]) .layout-center .ring-wrap { display:flex; justify-content:center; margin-bottom:16px; }
+    :host([theme="bubble"]) .ring-container       { position:relative; width:100px; height:100px; }
+    :host([theme="bubble"]) .ring-container.small { width:84px; height:84px; }
+    :host([theme="bubble"]) .layout-left, :host([theme="bubble"]) .layout-right { display:flex; align-items:center; gap:14px; }
+    :host([theme="bubble"]) .layout-left .ring-wrap, :host([theme="bubble"]) .layout-right .ring-wrap { flex-shrink:0; }
+    :host([theme="bubble"]) .layout-left .sensors-row, :host([theme="bubble"]) .layout-right .sensors-row { flex:1; }
+    :host([theme="bubble"]) .score-inline-col { background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; }
+    :host([theme="bubble"]) .score-inline-val { font-size:20px; font-weight:600; color:var(--aq-text); line-height:1; }
+    :host([theme="bubble"]) .score-inline-lbl { font-size:9px; margin-top:2px; font-weight:500; letter-spacing:.04em; transition:color .5s; }
+    :host([theme="bubble"]) .score-inline-name{ font-size:9px; color:var(--aq-muted); margin-bottom:3px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
+    :host([theme="bubble"]) .ring-track    { stroke:var(--aq-surface); stroke-width:10; }
+    :host([theme="bubble"]) .ring-progress { stroke-width:10; }
+    :host([theme="bubble"]) .ring-score       { font-size:28px; font-weight:600; color:var(--aq-text); line-height:1; }
+    :host([theme="bubble"]) .ring-score.small { font-size:22px; }
+    :host([theme="bubble"]) .ring-label       { font-size:10px; margin-top:2px; font-weight:500; letter-spacing:.04em; }
+    :host([theme="bubble"]) .ring-label.small { font-size:9px; }
+    :host([theme="bubble"]) .sensors-row { gap:6px; }
+    :host([theme="bubble"]) .sensor-col { background:var(--aq-surface); border-radius:18px; padding:10px 4px 8px; transition:opacity .15s; }
+    :host([theme="bubble"]) .sensor-col:hover { opacity:.8; }
+    :host([theme="bubble"]) .dots-col { gap:5px; margin-bottom:6px; }
+    :host([theme="bubble"]) .dot      { width:7px; height:7px; background:var(--aq-inactive); }
+    :host([theme="bubble"]) .sensor-name  { font-size:9px; color:var(--aq-muted); margin-bottom:3px; text-align:center; font-weight:500; letter-spacing:.03em; text-transform:uppercase; }
+    :host([theme="bubble"]) .sensor-value { font-size:14px; font-weight:600; color:var(--aq-text); line-height:1; }
+    :host([theme="bubble"]) .sensor-unit  { font-size:8px; color:var(--aq-muted); margin-top:2px; text-align:center; }
+    :host([theme="bubble"]) .col-divider  { display:none; }
+  `;
 }
 
 customElements.define("air-dots-card", AirDotsCard);
 
 // ─── EDITOR ────────────────────────────────────────────────────────────────────
 
-class AirDotsCardEditor extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._config = {};
-    this._hass   = null;
-  }
+class AirDotsCardEditor extends LitElement {
+  static properties = {
+    hass:    { attribute: false },
+    _config: { state: true },
+  };
 
   setConfig(config) {
-    this._config = JSON.parse(JSON.stringify(config));
-    this._render();
+    this._config = structuredClone(config);
   }
 
-  set hass(hass) {
-    this._hass = hass;
-    this.shadowRoot.querySelectorAll("ha-entity-picker").forEach(el => { el.hass = hass; });
+  _t() { return getT(this._config?.language, this.hass); }
+
+  _emit(cfg) {
+    this._config = cfg;
+    fireEvent(this, "config-changed", { config: cfg });
   }
 
-  _t() { return getT(this._config.language, this._hass); }
+  // ── Schemas for ha-form ──
 
-  _fire(cfg) {
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: cfg }, bubbles: true, composed: true,
-    }));
+  _topSchema(t) {
+    return [
+      {
+        name: "title",
+        selector: { text: {} },
+      },
+      {
+        name: "score_entity",
+        selector: { entity: { domain: ["sensor", "input_number"] } },
+      },
+      {
+        name: "_appearance",
+        type: "grid",
+        schema: [
+          {
+            name: "theme",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "default",  label: t.theme_default  },
+              { value: "mushroom", label: t.theme_mushroom },
+              { value: "bubble",   label: t.theme_bubble   },
+            ]}},
+          },
+          {
+            name: "score_position",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "center",       label: t.pos_center       },
+              { value: "left",         label: t.pos_left         },
+              { value: "right",        label: t.pos_right        },
+              { value: "inline_left",  label: t.pos_inline_left  },
+              { value: "inline_right", label: t.pos_inline_right },
+            ]}},
+          },
+        ],
+      },
+      {
+        name: "language",
+        selector: { select: { mode: "dropdown", options: [
+          { value: "auto", label: `${t.auto_lang} (${this.hass?.locale?.language || "?"})` },
+          { value: "en",   label: "English" },
+          { value: "de",   label: "Deutsch" },
+        ]}},
+      },
+    ];
   }
 
-  _set(path, value) {
-    const cfg   = JSON.parse(JSON.stringify(this._config));
-    const parts = path.split(".");
-    let obj = cfg;
-    for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
-    obj[parts[parts.length - 1]] = value;
-    this._config = cfg; this._fire(cfg); this._render();
+  _sensorSchema() {
+    return [
+      {
+        name: "entity",
+        selector: { entity: { domain: ["sensor", "input_number"] } },
+      },
+      {
+        name: "_meta",
+        type: "grid",
+        schema: [
+          { name: "label", selector: { text: {} } },
+          { name: "unit",  selector: { text: {} } },
+        ],
+      },
+      {
+        name: "symmetric",
+        selector: { boolean: {} },
+      },
+      {
+        name: "_thresholds",
+        type: "grid",
+        schema: [
+          { name: "t0", selector: { number: { mode: "box", step: "any" } } },
+          { name: "t1", selector: { number: { mode: "box", step: "any" } } },
+          { name: "t2", selector: { number: { mode: "box", step: "any" } } },
+          { name: "t3", selector: { number: { mode: "box", step: "any" } } },
+        ],
+      },
+    ];
+  }
+
+  _topLabel = (t) => (schema) => ({
+    title:          t.lbl_title,
+    score_entity:   t.lbl_score_entity,
+    theme:          t.lbl_theme,
+    score_position: t.lbl_position,
+    language:       t.lbl_language,
+  })[schema.name] ?? "";
+
+  _topHelper = (t) => (schema) => ({
+    score_entity: t.hint_score,
+  })[schema.name] ?? "";
+
+  _sensorLabel = (t, symmetric) => (schema) => {
+    if (schema.name === "entity")    return t.lbl_entity;
+    if (schema.name === "label")     return t.lbl_label;
+    if (schema.name === "unit")      return t.lbl_unit;
+    if (schema.name === "symmetric") return t.lbl_symmetric;
+    if (/^t[0-3]$/.test(schema.name)) {
+      const i = +schema.name[1];
+      return symmetric ? t.lbl_level_sym[i] : t.lbl_level[i];
+    }
+    return "";
+  };
+
+  _sensorHelper = (t) => (schema) => ({
+    symmetric: t.hint_symmetric,
+  })[schema.name] ?? "";
+
+  // ── Event handlers ──
+
+  _onTopChanged(e) {
+    const v   = e.detail.value;
+    const cfg = { ...this._config, ...v };
+    delete cfg._appearance;
+    this._emit(cfg);
+  }
+
+  _onSensorChanged(idx, e) {
+    const v   = e.detail.value;
+    const cfg = structuredClone(this._config);
+    const s   = cfg.sensors[idx];
+    s.entity    = v.entity;
+    s.label     = v.label;
+    s.unit      = v.unit;
+    s.symmetric = !!v.symmetric;
+    s.thresholds = [v.t0, v.t1, v.t2, v.t3].map(x =>
+      x === "" || x === null || x === undefined ? null : Number(x)
+    );
+    this._emit(cfg);
   }
 
   _addSensor() {
-    const cfg = JSON.parse(JSON.stringify(this._config));
+    const cfg = structuredClone(this._config);
     const def = AWAIR_DEFAULTS[cfg.sensors.length] || { label: "Sensor", unit: "", thresholds: [10,20,30,40] };
-    cfg.sensors.push({ entity: "", label: def.label, unit: def.unit, thresholds: [...def.thresholds] });
-    this._config = cfg; this._fire(cfg); this._render();
+    cfg.sensors.push({ entity: "", label: def.label, unit: def.unit, thresholds: [...def.thresholds], symmetric: !!def.symmetric });
+    this._emit(cfg);
   }
 
   _removeSensor(idx) {
-    const cfg = JSON.parse(JSON.stringify(this._config));
+    const cfg = structuredClone(this._config);
     cfg.sensors.splice(idx, 1);
-    this._config = cfg; this._fire(cfg); this._render();
+    this._emit(cfg);
   }
 
   _moveSensor(idx, dir) {
-    const cfg = JSON.parse(JSON.stringify(this._config));
+    const cfg = structuredClone(this._config);
     const to  = idx + dir;
     if (to < 0 || to >= cfg.sensors.length) return;
     [cfg.sensors[idx], cfg.sensors[to]] = [cfg.sensors[to], cfg.sensors[idx]];
-    this._config = cfg; this._fire(cfg); this._render();
+    this._emit(cfg);
   }
 
-  _render() {
-    const c        = this._config;
-    const sensors  = c.sensors || [];
-    const theme    = c.theme          || "default";
-    const position = c.score_position || "center";
-    const lang     = c.language       || "auto";
-    const t        = this._t();
+  render() {
+    if (!this._config || !this.hass) return html``;
+    const c       = this._config;
+    const sensors = c.sensors || [];
+    const t       = this._t();
 
-    const pill = (val, label, active) =>
-      `<button class="pill ${active ? "active" : ""}" data-val="${val}">${label}</button>`;
+    const topData = {
+      title:          c.title || "",
+      score_entity:   c.score_entity || "",
+      theme:          c.theme || "default",
+      score_position: c.score_position || "center",
+      language:       c.language || "auto",
+    };
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display:block; }
-        .section { margin-bottom:20px; }
-        .section-title { font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--secondary-text-color); margin-bottom:10px; padding-bottom:4px; border-bottom:1px solid var(--divider-color,#e0e0e0); }
-        .field { margin-bottom:12px; }
-        label { display:block; font-size:12px; color:var(--secondary-text-color); margin-bottom:4px; }
-        input[type="text"], input[type="number"], select { width:100%; padding:8px 10px; box-sizing:border-box; border-radius:6px; border:1px solid var(--divider-color,#ccc); background:var(--card-background-color,#fff); color:var(--primary-text-color); font-size:14px; }
-        input:focus, select:focus { outline:none; border-color:var(--primary-color); }
-        .pills { display:flex; gap:6px; flex-wrap:wrap; }
-        .pill { padding:7px 10px; border-radius:8px; border:1.5px solid var(--divider-color,#ddd); background:none; cursor:pointer; font-size:12px; color:var(--secondary-text-color); transition:all .15s; text-align:center; }
-        .pill.active { border-color:var(--primary-color,#03a9f4); background:var(--primary-color-light,#e3f2fd); color:var(--primary-color,#03a9f4); font-weight:500; }
-        .sensor-card { border:1px solid var(--divider-color,#e0e0e0); border-radius:10px; padding:14px 14px 10px; margin-bottom:12px; background:var(--secondary-background-color,#f5f5f5); }
-        .sensor-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-        .sensor-title { font-size:13px; font-weight:500; color:var(--primary-text-color); }
-        .actions { display:flex; gap:4px; }
-        .btn { background:none; border:none; cursor:pointer; padding:4px 7px; border-radius:6px; font-size:15px; line-height:1; color:var(--secondary-text-color); transition:background .15s; }
-        .btn:hover { background:var(--divider-color,#e0e0e0); }
-        .btn.del:hover { background:#ffebee; color:#c62828; }
-        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .four-col { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-        .add-btn { width:100%; padding:10px; border-radius:8px; border:1.5px dashed var(--divider-color,#bbb); background:none; cursor:pointer; font-size:14px; color:var(--primary-color); transition:background .15s; }
-        .add-btn:hover { background:var(--primary-color-light,#e8f4fd); }
-        ha-entity-picker { display:block; }
-        .hint { font-size:11px; color:var(--secondary-text-color); margin-top:3px; }
-      </style>
-
+    return html`
       <div class="section">
-        <div class="section-title">${t.sect_appearance}</div>
-        <div class="field">
-          <label>${t.lbl_theme}</label>
-          <div class="pills" id="theme-pills">
-            ${pill("default",  t.theme_default,  theme==="default")}
-            ${pill("mushroom", t.theme_mushroom, theme==="mushroom")}
-            ${pill("bubble",   t.theme_bubble,   theme==="bubble")}
-          </div>
-        </div>
-        <div class="field">
-          <label>${t.lbl_position}</label>
-          <div class="pills" id="pos-pills">
-            ${pill("center",       t.pos_center,       position==="center")}
-            ${pill("left",         t.pos_left,         position==="left")}
-            ${pill("right",        t.pos_right,        position==="right")}
-            ${pill("inline_left",  t.pos_inline_left,  position==="inline_left")}
-            ${pill("inline_right", t.pos_inline_right, position==="inline_right")}
-          </div>
-        </div>
-        <div class="field">
-          <label>Language</label>
-          <select id="sel-lang">
-            <option value="auto" ${lang==="auto"?"selected":""}>Auto (HA: ${this._hass?.locale?.language || this._hass?.language || "?"})</option>
-            <option value="en"   ${lang==="en"  ?"selected":""}>English</option>
-            <option value="de"   ${lang==="de"  ?"selected":""}>Deutsch</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">${t.sect_general}</div>
-        <div class="field">
-          <label>${t.lbl_title}</label>
-          <input id="inp-title" type="text" value="${c.title || ""}" placeholder="${t.lbl_title_ph}">
-        </div>
-        <div class="field">
-          <label>${t.lbl_score_entity}</label>
-          <ha-entity-picker id="picker-score" allow-custom-entity></ha-entity-picker>
-          <div class="hint">${t.hint_score}</div>
-        </div>
+        <div class="section-title">${t.sect_general} · ${t.sect_appearance}</div>
+        <ha-form
+          .hass=${this.hass}
+          .data=${topData}
+          .schema=${this._topSchema(t)}
+          .computeLabel=${this._topLabel(t)}
+          .computeHelper=${this._topHelper(t)}
+          @value-changed=${this._onTopChanged}
+        ></ha-form>
       </div>
 
       <div class="section">
         <div class="section-title">${t.sect_sensors} (${sensors.length})</div>
-        <div id="sensor-list"></div>
-        <button class="add-btn" id="btn-add">${t.btn_add}</button>
-      </div>`;
-
-    // Theme pills
-    this.shadowRoot.getElementById("theme-pills").querySelectorAll(".pill").forEach(btn => {
-      btn.addEventListener("click", () => { this._set("theme", btn.dataset.val); });
-    });
-
-    // Position pills
-    this.shadowRoot.getElementById("pos-pills").querySelectorAll(".pill").forEach(btn => {
-      btn.addEventListener("click", () => { this._set("score_position", btn.dataset.val); });
-    });
-
-    // Language selector
-    this.shadowRoot.getElementById("sel-lang").addEventListener("change", e => {
-      this._set("language", e.target.value);
-    });
-
-    // Card title
-    this.shadowRoot.getElementById("inp-title").addEventListener("change", e => {
-      this._set("title", e.target.value);
-    });
-
-    // Score entity picker
-    const scorePicker = this.shadowRoot.getElementById("picker-score");
-    if (this._hass) scorePicker.hass = this._hass;
-    scorePicker.value = c.score_entity || "";
-    scorePicker.addEventListener("value-changed", e => { this._set("score_entity", e.detail.value); });
-
-    // Build sensor cards
-    const list = this.shadowRoot.getElementById("sensor-list");
-    sensors.forEach((s, i) => {
-      const card = document.createElement("div");
-      card.className = "sensor-card";
-      card.innerHTML = `
-        <div class="sensor-header">
-          <span class="sensor-title">${i + 1}. ${s.label || "Sensor"}</span>
-          <div class="actions">
-            <button class="btn"     data-mv="-1" title="${t.tip_up}">${t.btn_up}</button>
-            <button class="btn"     data-mv="1"  title="${t.tip_down}">${t.btn_down}</button>
-            <button class="btn del" data-del="1" title="${t.tip_remove}">${t.btn_remove}</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>${t.lbl_entity}</label>
-          <ha-entity-picker allow-custom-entity></ha-entity-picker>
-        </div>
-        <div class="two-col">
-          <div class="field">
-            <label>${t.lbl_label}</label>
-            <input type="text" data-key="label" value="${s.label || ""}" placeholder="${t.lbl_label_ph}">
-          </div>
-          <div class="field">
-            <label>${t.lbl_unit}</label>
-            <input type="text" data-key="unit" value="${s.unit || ""}" placeholder="${t.lbl_unit_ph}">
-          </div>
-        </div>
-        <div class="field">
-          <label>
-            <input type="checkbox" data-bool-key="symmetric" ${s.symmetric ? "checked" : ""} style="margin-right:4px">
-            ${t.lbl_symmetric}
-          </label>
-          <div class="hint">${t.hint_symmetric}</div>
-        </div>
-        <div class="field">
-          <label>${t.lbl_thresholds} <span style="font-weight:400">${s.symmetric ? t.hint_thresholds_sym : t.hint_thresholds}</span></label>
-          <div class="four-col">
-            ${[0,1,2,3].map(ti => `
-              <div>
-                <label style="font-size:11px">${s.symmetric ? t.lbl_level_sym[ti] : `${t.lbl_level} ${ti+1}→${ti+2}`}</label>
-                <input type="number" data-ti="${ti}" value="${(s.thresholds||[])[ti] ?? ""}">
-              </div>`).join("")}
-          </div>
-        </div>`;
-
-      card.querySelectorAll("input[data-key]").forEach(inp => {
-        inp.addEventListener("change", e => { this._set(`sensors.${i}.${e.target.dataset.key}`, e.target.value); });
-      });
-
-      card.querySelectorAll("input[data-bool-key]").forEach(inp => {
-        inp.addEventListener("change", e => { this._set(`sensors.${i}.${e.target.dataset.boolKey}`, e.target.checked); });
-      });
-
-      card.querySelectorAll("input[data-ti]").forEach(inp => {
-        inp.addEventListener("change", e => {
-          const cfg = JSON.parse(JSON.stringify(this._config));
-          cfg.sensors[i].thresholds[parseInt(e.target.dataset.ti)] = parseFloat(e.target.value);
-          this._config = cfg; this._fire(cfg);
-        });
-      });
-
-      card.querySelector("[data-mv='-1']").addEventListener("click", () => { this._moveSensor(i, -1); });
-      card.querySelector("[data-mv='1']").addEventListener("click",  () => { this._moveSensor(i, +1); });
-      card.querySelector("[data-del]").addEventListener("click",     () => { this._removeSensor(i); });
-
-      list.appendChild(card);
-
-      // Set picker properties AFTER the card is in the DOM so the element is connected
-      const picker = card.querySelector("ha-entity-picker");
-      if (this._hass) picker.hass = this._hass;
-      picker.value = s.entity || "";
-      picker.addEventListener("value-changed", e => { this._set(`sensors.${i}.entity`, e.detail.value); });
-    });
-
-    this.shadowRoot.getElementById("btn-add").addEventListener("click", () => { this._addSensor(); });
+        ${sensors.map((s, i) => {
+          const data = {
+            entity:    s.entity || "",
+            label:     s.label  || "",
+            unit:      s.unit   || "",
+            symmetric: !!s.symmetric,
+            t0: s.thresholds?.[0] ?? null,
+            t1: s.thresholds?.[1] ?? null,
+            t2: s.thresholds?.[2] ?? null,
+            t3: s.thresholds?.[3] ?? null,
+          };
+          return html`
+            <div class="sensor-card">
+              <div class="sensor-header">
+                <span class="sensor-title">${i + 1}. ${s.label || "Sensor"}</span>
+                <div class="actions">
+                  <ha-icon-button
+                    .label=${t.tip_up}
+                    .path=${"M7,15L12,10L17,15H7Z"}
+                    @click=${() => this._moveSensor(i, -1)}
+                  ></ha-icon-button>
+                  <ha-icon-button
+                    .label=${t.tip_down}
+                    .path=${"M7,10L12,15L17,10H7Z"}
+                    @click=${() => this._moveSensor(i, +1)}
+                  ></ha-icon-button>
+                  <ha-icon-button
+                    class="del"
+                    .label=${t.tip_remove}
+                    .path=${"M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"}
+                    @click=${() => this._removeSensor(i)}
+                  ></ha-icon-button>
+                </div>
+              </div>
+              <div class="thresholds-hint">
+                ${s.symmetric ? t.hint_thresholds_sym : t.hint_thresholds}
+              </div>
+              <ha-form
+                .hass=${this.hass}
+                .data=${data}
+                .schema=${this._sensorSchema()}
+                .computeLabel=${this._sensorLabel(t, !!s.symmetric)}
+                .computeHelper=${this._sensorHelper(t)}
+                @value-changed=${(e) => this._onSensorChanged(i, e)}
+              ></ha-form>
+            </div>
+          `;
+        })}
+        <button class="add-btn" @click=${this._addSensor}>${t.btn_add}</button>
+      </div>
+    `;
   }
+
+  static styles = css`
+    :host { display:block; }
+    .section { margin-bottom:20px; }
+    .section-title {
+      font-size:11px; font-weight:500; text-transform:uppercase;
+      letter-spacing:.08em; color:var(--secondary-text-color);
+      margin-bottom:10px; padding-bottom:4px;
+      border-bottom:1px solid var(--divider-color,#e0e0e0);
+    }
+    .sensor-card {
+      border:1px solid var(--divider-color,#e0e0e0);
+      border-radius:10px; padding:12px; margin-bottom:12px;
+      background:var(--secondary-background-color,#f5f5f5);
+    }
+    .sensor-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:8px;
+    }
+    .sensor-title { font-size:13px; font-weight:500; color:var(--primary-text-color); }
+    .actions { display:flex; gap:2px; }
+    .actions ha-icon-button { --mdc-icon-button-size:32px; --mdc-icon-size:18px; color:var(--secondary-text-color); }
+    .actions ha-icon-button.del { color:var(--error-color, #c62828); }
+    .thresholds-hint {
+      font-size:11px; color:var(--secondary-text-color);
+      margin-bottom:6px; padding:0 4px;
+    }
+    .add-btn {
+      width:100%; padding:10px; border-radius:8px;
+      border:1.5px dashed var(--divider-color,#bbb);
+      background:none; cursor:pointer; font-size:14px;
+      color:var(--primary-color); transition:background .15s;
+    }
+    .add-btn:hover { background:var(--primary-color-light, rgba(3,169,244,.08)); }
+    ha-form { display:block; }
+  `;
 }
 
 customElements.define("air-dots-card-editor", AirDotsCardEditor);
@@ -795,4 +826,5 @@ window.customCards.push({
   name: "Air Dots Card",
   description: "Awair-inspired air quality card — 3 themes × 5 score positions · en/de",
   preview: true,
+  documentationURL: "https://github.com/tioan/air-dots-card",
 });

@@ -1,7 +1,7 @@
 # Air Dots Card for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![HA minimum version](https://img.shields.io/badge/Home%20Assistant-%3E%3D2023.9-blue.svg)](https://www.home-assistant.io/)
+[![HA minimum version](https://img.shields.io/badge/Home%20Assistant-%3E%3D2026.5-blue.svg)](https://www.home-assistant.io/)
 [![GitHub](https://img.shields.io/badge/GitHub-tioan%2Fair--dots--card-black.svg?logo=github)](https://github.com/tioan/air-dots-card)
 [![Codeberg](https://img.shields.io/badge/Codeberg-tioan%2Fair--dots--card-blue.svg?logo=codeberg)](https://codeberg.org/tioan/air-dots-card)
 [![Created with Claude](https://img.shields.io/badge/Created%20with-Claude%20Sonnet%204.6-blueviolet.svg?logo=anthropic)](https://claude.ai)
@@ -69,7 +69,17 @@ Displays up to 5 sensors with a **dot-bar indicator**, color-coded by severity, 
 - Full UI editor — configure everything without touching YAML
 - Sensors can be added, removed, and reordered in the editor
 - Awair thresholds pre-loaded as defaults
-- Tap any sensor column to open the entity detail dialog
+- Tap any sensor column to open the entity detail dialog (or configure a custom `tap_action`)
+- Built on top of `LitElement` and `<ha-form>` for native Home Assistant look-and-feel
+- Locale-aware value formatting (respects your HA profile's number format)
+- `getGridOptions()` support for the Sections dashboard (HA 2024.10+)
+
+<br>
+
+## Requirements
+
+- **Home Assistant 2026.5.0** or newer.
+  Older HA cores must use Air Dots Card **0.8.8**.
 
 <br>
 
@@ -133,9 +143,10 @@ The editor is fully translated — it switches language automatically based on y
 | Language | `Auto` (browser locale) · `English` · `Deutsch` |
 | Card title | Optional label above the card |
 | Score entity | HA sensor providing the score (0–100) |
-| Sensor entity | Entity picker per sensor |
-| Label / Unit | Display name and unit string |
+| Sensor entity | Entity picker per sensor (auto-fills label/unit from entity attributes if blank) |
+| Label / Unit | Display name and unit string — leave blank to inherit `friendly_name` / `unit_of_measurement` from the entity |
 | Thresholds | 4 values defining the 5 severity levels |
+| Symmetric scale | Toggle for sensors where the optimal range is in the middle (temp, humidity) |
 
 Sensors can be **reordered** with ↑ / ↓ and **removed** with ✕. New sensors are added with **+ Add sensor** and come pre-filled with the next Awair default.
 
@@ -193,6 +204,7 @@ sensors:
 | `title` | string | — | Optional label above the card |
 | `score_entity` | string | — | HA sensor providing score (0–100) |
 | `sensors` | list | — | List of sensor definitions |
+| `score_tap_action` | object | `more-info` | Tap action for the inline score column. See **Tap actions** below. |
 
 #### Sensor options
 
@@ -203,8 +215,33 @@ sensors:
 | `unit` | string | ✅ | Unit string |
 | `thresholds` | list | ✅ | 4 boundary values (see below) |
 | `symmetric` | bool | — | `true` for sensors where the optimal range is in the center (temp, humidity). Thresholds define `[low_bad, low_ok, high_ok, high_bad]`. Default: `false` (linear scale, higher = worse). |
+| `tap_action` | object | `more-info` | Custom tap action for this sensor column. See **Tap actions** below. |
+
+> **Note:** `label` and `unit` are now optional — if omitted, the card uses
+> the entity's `friendly_name` and `unit_of_measurement` attributes.
 
 > **Note:** `mushroom` and `bubble` themes inherit HA CSS variables automatically — no extra integration needed.
+
+#### Tap actions
+
+Each sensor and the inline score column support a HA-standard `tap_action`
+object. Without configuration the card opens the entity's more-info dialog.
+
+```yaml
+sensors:
+  - entity: sensor.awair_element_co2
+    tap_action:
+      action: navigate          # more-info | navigate | url | perform-action | none
+      navigation_path: /lovelace/air-quality
+
+score_tap_action:
+  action: url
+  url_path: https://www.getawair.com/
+```
+
+Supported actions: `more-info` (default), `navigate` (with `navigation_path`),
+`url` (with `url_path`), `perform-action` / `call-service`
+(with `perform_action` or `service`, optional `data` and `target`), `none`.
 
 <br>
 

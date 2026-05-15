@@ -20,6 +20,75 @@ Types of changes:
 
 ---
 
+## [0.9.0] — Lit + ha-form refactor (HA 2026.5 baseline)
+
+> **Breaking:** Minimum Home Assistant version is now **2026.5.0**
+> (previously 2023.9.0). The card uses APIs that are guaranteed to be
+> available in modern HA cores (`ha-form`, `ha-icon-button`, `light-dark()`
+> CSS, `structuredClone`, `Intl.NumberFormat` with `hass.locale`).
+> Existing YAML configurations remain fully compatible.
+
+### Changed
+- **Card rewritten on top of LitElement** (borrowed from the HA frontend
+  via the `ha-panel-lovelace` prototype). Replaces the previous manual
+  `HTMLElement` + `innerHTML` + `getElementById` rendering — the card is
+  now fully reactive: changes to `hass` or `_config` automatically
+  re-render only what changed.
+- **Editor rewritten on top of `<ha-form>` + HA Selectors.** The custom
+  pill buttons, manual `<input>` / `<select>` / checkbox markup and the
+  `_set(path, value)` path-walker are gone. Top section uses one form
+  with `entity` / `select` / `text` selectors; each sensor uses one form
+  with `entity` / `text` / `boolean` / `number` selectors. Result: native
+  HA look-and-feel, automatic theming, free validation.
+- **CSS architecture:** themes are now scoped via `:host([theme="…"])`
+  attribute selectors in a single `static styles` block instead of three
+  string-injected `<style>` elements per render.
+- **Score ring math:** SVG `pathLength="100"` removes the magic constant
+  `376.99` (= 2π·60). The score (0–100) now maps directly to
+  `stroke-dashoffset`.
+- Reorder / delete buttons in the editor use `<ha-icon-button>` with MDI
+  paths instead of unicode glyphs in plain `<button>` elements.
+- Mushroom and Bubble themes use the CSS `light-dark()` function for
+  surface and inactive-dot colors instead of `var(--rgb-…)` with rgba
+  alpha workarounds.
+
+### Added
+- **`tap_action` per sensor and `score_tap_action` for the score column.**
+  Supports `more-info` (default), `navigate`, `url`, `perform-action`
+  / `call-service`, and `none`. Backward compatible — without
+  configuration the card behaves exactly like before (opens the
+  entity's more-info dialog).
+- **`getGridOptions()`** for the Sections dashboard (HA 2024.10+) — the
+  card now declares sensible default and minimum sizes based on the
+  number of sensors and whether the score is inline.
+- **Locale-aware value formatting** via `Intl.NumberFormat(hass.locale.language)`
+  — sensor values respect the user's decimal separator (`23,5` vs
+  `23.5`) instead of the JS default `toFixed(1)`.
+- **Auto-derivation of `label` and `unit`** from entity attributes
+  (`friendly_name`, `unit_of_measurement`) when not explicitly set in
+  the config. Configured values still take precedence.
+- `documentationURL` field in the `customCards` registration so the HA
+  card picker links straight to the GitHub README.
+
+### Removed
+- Manual DOM building helpers (`_buildSensorColumns`, `_ringHTML`,
+  `_inlineScoreHTML`, `updateValues`, `render` as innerHTML setter) —
+  replaced by Lit `render()` returning `html\`…\``.
+- Editor helpers `_render`, `_set`, manual pill rendering, manual entity
+  picker connection ordering — replaced by `<ha-form>` schemas.
+- Five occurrences of `JSON.parse(JSON.stringify(...))` — replaced by
+  `structuredClone()`.
+- Hard-coded SVG circumference `376.99` — replaced by `pathLength="100"`.
+
+### Migration
+- **No config changes required.** All existing YAML configurations work
+  unchanged.
+- HA users on versions < 2026.5 must stay on `0.8.8`.
+- HACS will refuse to install 0.9.0 on older HA cores (enforced via
+  `hacs.json` `homeassistant: 2026.5.0`).
+
+---
+
 ## [0.8.8] — Restore entity picker visibility
 
 ### Fixed
