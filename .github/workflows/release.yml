@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { flag=1; next }
+            /^## \[/                { flag=0 }
+            flag                    { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG section found for v$VERSION — using fallback." >&2
+            echo "Release **v$VERSION**." > release-notes.md
+          fi
+          echo "----- Release notes preview -----"
+          cat release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Strip leading "v" already extracted; use full tag for the title prefix.
+          TITLE_LINE=$(awk -v v="${{ steps.ver.outputs.version }}" '
+            $0 ~ "^## \\[" v "\\]" { sub(/^## /, ""); print; exit }
+          ' CHANGELOG.md)
+          TITLE="${TITLE_LINE:-${GITHUB_REF_NAME}}"
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$TITLE" \
+            --notes-file release-notes.md \
+            air-dots-card.js
